@@ -1634,7 +1634,7 @@
 #### 【法人側財務】
 - **売上総利益（粗利）**: ${formatMan(currentRes.grossProfit)} (粗利率: ${currentRes.revenueEx > 0 ? Math.round((currentRes.grossProfit / currentRes.revenueEx) * 100) + '%' : '0%'})
 - **役員報酬前営業利益**: ${formatMan(currentRes.preSalaryOperatingProfit)}
-- **課税対象法人所得**: ${formatMan(currentRes.corpIncomeBeforeTax)}
+- **課税対象法人所得**: ${formatMan(currentRes.corpIncomeBeforeTax)} (内訳: 報酬前営業利益 ${formatMan(currentRes.preSalaryOperatingProfit)} - 役員報酬 ${formatMan(currentRes.salaryAnnual)} - 会社社会保険料 ${formatMan(currentRes.cShaho)} + 消費税の損益影響(差額益税/損税) ${currentRes.consumptionTaxImpact >= 0 ? '+' : ''}${formatMan(currentRes.consumptionTaxImpact)})
 - **社会保険料 (会社負担分)**: ${formatMan(currentRes.cShaho)}
 - **法人税等（実効税率・均等割含む）**: ${formatMan(currentRes.corpTaxes)}
 - **【法人】最終内部留保（手残り）**: ${formatMan(currentRes.corpReserve)}
