@@ -1609,14 +1609,18 @@
             const industryStr = taxType === 'simplified' ? `（第${industryRate === 0.9 ? '1' : industryRate === 0.8 ? '2' : industryRate === 0.7 ? '3' : industryRate === 0.6 ? '4' : industryRate === 0.5 ? '5' : '6'}種：みなし仕入率${industryRate * 100}%）` : '';
             const accountingStr = accountingMethod === 'excluded' ? '税抜経理' : '税込経理';
 
+            const revTaxStr = isTaxIncluded ? `税込 / 税抜換算: ${formatMan(currentRes.revenueEx)}` : '税抜';
+            const subTaxStr = isTaxIncluded ? `税込 / 税抜換算: ${formatMan(currentRes.subcontractingEx)}` : '税抜';
+            const sgaTaxStr = isTaxIncluded ? `税込 / 税抜換算: ${formatMan(currentRes.sgaEx)}` : '税抜';
+
             return `以下の条件で合同会社の決算および役員報酬のシミュレーションを行いました。この財務データを分析し、法人の財務健全性の向上、節税対策、個人＋法人の合計手残りキャッシュの最大化に向けた具体的なアドバイスをプロの税理士・財務コンサルタントの視点で詳細に提供してください。
 
 ---
 
 ### 1. シミュレーション設定条件
-- **年間売上高**: ${rawRevenue}万円 (${isTaxIncluded ? '税込' : '税抜'})
-- **外注費・仕入等**: ${rawSubcontracting}万円 (${isTaxIncluded ? '税込' : '税抜'})
-- **一般販管費 (経費)**: ${rawSga}万円 (${isTaxIncluded ? '税込' : '税抜'})
+- **年間売上高**: ${rawRevenue}万円 (${revTaxStr})
+- **外注費・仕入等**: ${rawSubcontracting}万円 (${subTaxStr})
+- **一般販管費 (経費)**: ${rawSga}万円 (${sgaTaxStr})
 - **設定役員報酬**: 月額${monthlySalary}万円 (年間総額: ${monthlySalary * 12}万円)
 - **年齢区分**: ${ageStr}
 - **健康保険料率**: ${healthStr}
