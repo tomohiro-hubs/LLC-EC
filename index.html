@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>合同会社 決算＆役員報酬シミュレーター</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-950 px-6 py-4 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-emerald-600/20 text-emerald-400 rounded-lg">
+                    <i data-lucide="calculator" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                        LLC役員報酬・決算最適化シミュレーター
+                        <span
+                            class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full">実務会計版</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">個人（総支給・手取り）と法人（内部留保・納税）の完全分離分析</p>
+                </div>
+            </div>
+            <div class="text-xs text-slate-400 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
+                <span class="font-semibold text-emerald-400">前提税制:</span> 2025年改正準拠（令和7年度・協会けんぽ料率／簡易計算）
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Column: Inputs -->
+        <section class="lg:col-span-4 flex flex-col gap-6">
+            <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col gap-6">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="sliders" class="text-emerald-400 w-5 h-5"></i>
+                        <h2 class="text-lg font-bold text-white">シミュレーション前提</h2>
+                    </div>
+                </div>
+
+                <!-- Input Tax Mode Switch -->
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex flex-col gap-2">
+                    <span class="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
+                        <i data-lucide="coins" class="w-3.5 h-3.5 text-amber-400"></i>
+                        <span>入力する金額の課税区分設定</span>
+                    </span>
+                    <div class="grid grid-cols-2 gap-2 bg-slate-950 p-1 rounded-lg border border-slate-800">
+                        <button id="btn-tax-exclude"
+                            class="px-3 py-1.5 text-xs font-medium rounded-md bg-emerald-600 text-white transition-all flex items-center justify-center gap-1">
+                            <i data-lucide="percent" class="w-3 h-3"></i>
+                            <span>税抜で入力する</span>
+                        </button>
+                        <button id="btn-tax-include"
+                            class="px-3 py-1.5 text-xs font-medium rounded-md text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1">
+                            <i data-lucide="hand-coins" class="w-3 h-3"></i>
+                            <span>税込で入力する</span>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-500 text-center">※手元の試算表や通帳などの金額に合わせて切り替えてください。</p>
+                </div>
+
+                <!-- Input 1: Revenue -->
+                <div class="flex flex-col gap-2">
+                    <div class="flex justify-between items-center">
+                        <label for="input-revenue" class="text-sm font-medium text-slate-300">年間売上高 <span
+                                class="tax-label text-slate-500 font-normal text-xs">（税抜）</span></label>
+                        <span class="text-xs text-emerald-400 font-bold" id="label-revenue">1,200 万円</span>
+                    </div>
+                    <div class="relative">
+                        <input type="range" id="input-revenue" min="100" max="10000" step="50" value="1200"
+                            class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+                        <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                            <span>100万</span>
+                            <span>3,000万</span>
+                            <span>6,000万</span>
+                            <span>10,000万</span>
+                        </div>
+                    </div>
+                    <input type="number" id="num-revenue" value="1200"
+                        class="mt-2 w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 text-right font-mono">
+                </div>
+
+                <!-- Input 2: Subcontracting Costs -->
+                <div class="flex flex-col gap-2">
+                    <div class="flex justify-between items-center">
+                        <label for="input-subcontracting" class="text-sm font-medium text-slate-300">外注費・仕入等 <span
+                                class="tax-label text-slate-500 font-normal text-xs">（税抜）</span></label>
+                        <span class="text-xs text-rose-400 font-bold" id="label-subcontracting">200 万円</span>
+                    </div>
+                    <div class="relative">
+                        <input type="range" id="input-subcontracting" min="0" max="5000" step="20" value="200"
+                            class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+                        <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                            <span>0万</span>
+                            <span>1,500万</span>
+                            <span>3,000万</span>
+                            <span>5,000万</span>
+                        </div>
+                    </div>
+                    <input type="number" id="num-subcontracting" value="200"
+                        class="mt-2 w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 text-right font-mono">
+                </div>
+
+                <!-- Input 3: SG&A / Other Expenses -->
+                <div class="flex flex-col gap-2">
+                    <div class="flex justify-between items-center">
+                        <label for="input-sga" class="text-sm font-medium text-slate-300">一般販管費（その他経費） <span
+                                class="tax-label text-slate-500 font-normal text-xs">（税抜）</span></label>
+                        <span class="text-xs text-amber-400 font-bold" id="label-sga">150 万円</span>
+                    </div>
+                    <div class="relative">
+                        <input type="range" id="input-sga" min="0" max="3000" step="10" value="150"
+                            class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+                        <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                            <span>0万</span>
+                            <span>1,000万</span>
+                            <span>2,000万</span>
+                            <span>3,000万</span>
+                        </div>
+                    </div>
+                    <input type="number" id="num-sga" value="150"
+                        class="mt-2 w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 text-right font-mono">
+                    <p class="text-[11px] text-slate-500">家賃、通信費、広告費、ツール利用料、旅費交通費など。</p>
+                </div>
+
+                <!-- Input 4: Executive Salary -->
+                <div class="flex flex-col gap-2 pt-4 border-t border-slate-800/60">
+                    <div class="flex justify-between items-center">
+                        <label for="input-salary"
+                            class="text-sm font-medium text-emerald-400 font-semibold">設定役員報酬（月額）</label>
+                        <span class="text-sm text-emerald-400 font-bold" id="label-salary">40 万円</span>
+                    </div>
+                    <div class="relative">
+                        <input type="range" id="input-salary" min="0" max="300" step="5" value="40"
+                            class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+                        <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                            <span>0（無報酬）</span>
+                            <span>100万</span>
+                            <span>200万</span>
+                            <span>300万</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between gap-2 mt-2">
+                        <input type="number" id="num-salary" value="40"
+                            class="w-1/2 bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 text-right font-mono">
+                        <span class="text-xs text-slate-400 w-1/2">年間総額: <span id="label-salary-annual"
+                                class="font-mono text-white font-bold">480</span> 万円</span>
+                    </div>
+                </div>
+
+                <!-- Input 5: Additional Options -->
+                <div class="flex flex-col gap-3 pt-4 border-t border-slate-800/60">
+                    <span class="text-xs font-semibold text-slate-400 tracking-wider uppercase">追加オプション</span>
+
+                    <div class="flex justify-between items-center">
+                        <label for="select-age" class="text-sm text-slate-300">年齢区分（社会保険料率）</label>
+                        <select id="select-age"
+                            class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+                            <option value="under40">40歳未満（介護保険なし）</option>
+                            <option value="over40" selected>40歳〜64歳（介護保険あり）</option>
+                        </select>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <label for="select-health-rate" class="text-sm text-slate-300">健康保険料率（協会けんぽ）</label>
+                        <select id="select-health-rate"
+                            class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+                            <option value="0.0944">沖縄 9.44%（最低）</option>
+                            <option value="0.0991">東京 9.91%</option>
+                            <option value="0.1000" selected>全国平均 10.00%</option>
+                            <option value="0.1078">佐賀 10.78%（最高）</option>
+                        </select>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <label for="input-provident" class="text-sm text-slate-300">小規模企業共済/iDeCo（月額）</label>
+                        <select id="input-provident"
+                            class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+                            <option value="0">未加入 (0円)</option>
+                            <option value="2.3">iDeCoのみ最大 (2.3万円)</option>
+                            <option value="7.0">小規模共済のみ最大 (7万円)</option>
+                            <option value="9.3" selected>両方併用最大 (9.3万円)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Input 6: Consumption Tax Settings -->
+                <div class="flex flex-col gap-3 pt-4 border-t border-slate-800/60">
+                    <span
+                        class="text-xs font-semibold text-amber-400 tracking-wider uppercase flex items-center gap-1.5">
+                        <i data-lucide="percent" class="w-4 h-4"></i>
+                        <span>消費税の申告区分設定</span>
+                    </span>
+
+                    <div class="flex justify-between items-center">
+                        <label for="select-tax-type" class="text-sm text-slate-300">消費税の課税区分</label>
+                        <select id="select-tax-type"
+                            class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+                            <option value="exempt">免税事業者（納付額0）</option>
+                            <option value="principle">一般課税（原則課税/実額計算）</option>
+                            <option value="simplified" selected>簡易課税制度</option>
+                            <option value="twowari">2割特例（インボイス経過措置）</option>
+                        </select>
+                    </div>
+
+                    <div class="flex justify-between items-center" id="industry-select-container">
+                        <label for="select-industry" class="text-xs text-slate-400">簡易課税のみなし仕入率</label>
+                        <select id="select-industry"
+                            class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-[11px] text-white focus:outline-none focus:border-emerald-500">
+                            <option value="0.9">第1種：卸売業 (90%)</option>
+                            <option value="0.8">第2種：小売業 (80%)</option>
+                            <option value="0.7">第3種：製造・建設等 (70%)</option>
+                            <option value="0.6">第4種：飲食店等 (60%)</option>
+                            <option value="0.5" selected>第5種：サービス業等 (50%)</option>
+                            <option value="0.4">第6種：不動産業 (40%)</option>
+                        </select>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <label for="select-accounting" class="text-xs text-slate-400">消費税の経理方式</label>
+                        <select id="select-accounting"
+                            class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-[11px] text-white focus:outline-none focus:border-emerald-500">
+                            <option value="excluded" selected>税抜経理（納付額は損益不算入）</option>
+                            <option value="included">税込経理（益税/損税を損益算入）</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tax info cards -->
+            <div
+                class="bg-slate-950 p-5 rounded-2xl border border-slate-800 text-xs text-slate-400 flex flex-col gap-3">
+                <div class="flex items-center gap-1.5 text-slate-200 font-semibold">
+                    <i data-lucide="info" class="w-4 h-4 text-emerald-400"></i>
+                    <span>会社と個人の分離思想</span>
+                </div>
+                <p class="leading-relaxed text-[11px]">
+                    個人と法人の資金は厳密に切り分けるべきです。役員報酬の設定は、単なる「全体の最大化」ではなく、「会社の存続・投資用の留保」と「個人の生活設計・貯蓄（生存年収）」の分離バランスの決定プロセスです。
+                </p>
+                <p class="leading-relaxed text-[11px] text-amber-400/80">
+                    ※本ツールは簡易計算です。標準報酬月額は等級表に厳密対応しておらず、扶養・各種税額控除も未考慮です。実際の申告は税理士にご確認ください。
+                </p>
+            </div>
+        </section>
+
+        <!-- Right Column: Dashboard -->
+        <section class="lg:col-span-8 flex flex-col gap-6">
+
+            <!-- Tab Navigation (Dashboard View & Deep Analysis View) -->
+            <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 self-start">
+                <button id="tab-summary"
+                    class="px-5 py-2 text-sm font-medium rounded-lg bg-emerald-600 text-white transition-all flex items-center gap-2">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                    <span>ダッシュボード</span>
+                </button>
+                <button id="tab-analysis"
+                    class="px-5 py-2 text-sm font-medium rounded-lg text-slate-400 hover:text-white transition-all flex items-center gap-2">
+                    <i data-lucide="line-chart" class="w-4 h-4"></i>
+                    <span>多角・最適化分析</span>
+                </button>
+            </div>
+
+            <!-- TAB CONTENT 1: Summary Dashboard -->
+            <div id="content-summary" class="flex flex-col gap-6">
+
+                <!-- Main KPI Cards (Separated into Company & Individual) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <!-- KPI 1: Operating Profit before Salary (役員報酬前営業利益) -->
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-lg">
+                        <span class="text-xs font-semibold text-slate-400 block truncate">
+                            役員報酬前営業利益
+                        </span>
+                        <div class="mt-2 flex items-baseline gap-1">
+                            <span class="text-lg font-bold text-slate-200 tracking-tight font-mono"
+                                id="kpi-pre-salary-profit">0</span>
+                            <span class="text-[10px] text-slate-400">万円</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-1 truncate">報酬・社保に回せる上限</p>
+                    </div>
+
+                    <!-- KPI 2: Executive Salary Gross (個人・総支給額) -->
+                    <div
+                        class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-lg ring-1 ring-emerald-500/20">
+                        <span class="text-xs font-semibold text-emerald-400 block truncate">
+                            【個人】役員報酬総支給
+                        </span>
+                        <div class="mt-2 flex items-baseline gap-1">
+                            <span class="text-lg font-bold text-emerald-400 tracking-tight font-mono"
+                                id="kpi-personal-gross">0</span>
+                            <span class="text-[10px] text-slate-400">万円/年</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-1 truncate">月額額面：<span id="kpi-personal-gross-monthly"
+                                class="font-bold text-slate-300">0</span>万</p>
+                    </div>
+
+                    <!-- KPI 3: Individual Take-home (個人・実質手取り) -->
+                    <div
+                        class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-lg ring-1 ring-emerald-500/20">
+                        <span class="text-xs font-semibold text-emerald-400 block truncate">
+                            【個人】実質手取り
+                        </span>
+                        <div class="mt-2 flex items-baseline gap-1">
+                            <span class="text-lg font-bold text-emerald-300 tracking-tight font-mono"
+                                id="kpi-personal-takehome">0</span>
+                            <span class="text-[10px] text-slate-400">万円/年</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-1 truncate">月額手取：<span id="kpi-personal-monthly"
+                                class="font-mono text-slate-300 font-bold">0</span>万</p>
+                    </div>
+
+                    <!-- KPI 4: Company Net (法人・内部留保) -->
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-lg ring-1 ring-blue-500/20"
+                        id="card-corp-reserve">
+                        <span class="text-xs font-semibold text-blue-400 block truncate">
+                            【法人】最終内部留保
+                        </span>
+                        <div class="mt-2 flex items-baseline gap-1">
+                            <span class="text-lg font-bold text-blue-400 tracking-tight font-mono"
+                                id="kpi-corp-reserve">0</span>
+                            <span class="text-[10px] text-slate-400">万円/年</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-1 truncate" id="kpi-corp-status">諸税・社保会社負担引後</p>
+                    </div>
+
+                    <!-- KPI 5: Gross Profit (粗利) -->
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-lg">
+                        <span class="text-xs font-semibold text-slate-400 block truncate">
+                            売上総利益（粗利）
+                        </span>
+                        <div class="mt-2 flex items-baseline gap-1">
+                            <span class="text-lg font-bold text-slate-200 tracking-tight font-mono"
+                                id="kpi-gross-profit">0</span>
+                            <span class="text-[10px] text-slate-400">万円</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-1 truncate">粗利率: <span id="kpi-gross-ratio"
+                                class="font-bold">0%</span></p>
+                    </div>
+                </div>
+
+                <!-- 3 Scenario Comparison Grid -->
+                <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-xl">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="layers" class="text-emerald-400 w-5 h-5"></i>
+                            <h3 class="text-base font-bold text-white">役員報酬シナリオ 3パターン比較（個人・法人別の獲得キャッシュ）</h3>
+                        </div>
+                        <span class="text-xs text-slate-400">（金額単位：万円/年）</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                        <!-- Scenario 1: No Salary -->
+                        <div
+                            class="bg-slate-900/50 p-4 rounded-xl border border-slate-800/80 flex flex-col gap-3 relative">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-bold text-slate-400 bg-slate-800 px-2.5 py-1 rounded-md">パターン
+                                    A</span>
+                                <span class="text-[10px] text-slate-500">役員報酬ゼロ</span>
+                            </div>
+                            <div class="border-b border-slate-800/80 pb-2">
+                                <span class="text-[10px] text-slate-400 block">年間総支給（額面）</span>
+                                <span class="text-lg font-bold text-slate-300 font-mono">0<span
+                                        class="text-xs font-normal"> 万円</span></span>
+                            </div>
+                            <div class="space-y-1.5 text-xs text-slate-300">
+                                <div class="flex justify-between text-emerald-400"><span>個人実質手取り:</span> <span
+                                        class="font-mono">0 万</span></div>
+                                <div class="flex justify-between text-blue-400"><span>法人最終内部留保:</span> <span
+                                        class="font-mono" id="sc-a-corp">0 万</span></div>
+                                <div class="flex justify-between text-slate-500"><span>社会保険料総額:</span> <span
+                                        class="font-mono text-red-400/80" id="sc-a-shaho">0 万</span></div>
+                                <div class="flex justify-between text-slate-500"><span>税金支払総額:</span> <span
+                                        class="font-mono text-red-400" id="sc-a-tax">0 万</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Scenario 2: Current Choice -->
+                        <div
+                            class="bg-emerald-950/10 p-4 rounded-xl border border-emerald-500/30 flex flex-col gap-3 relative ring-1 ring-emerald-500/20">
+                            <div
+                                class="absolute -top-2.5 right-4 bg-emerald-500 text-slate-950 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                設定中
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span
+                                    class="text-xs font-bold text-emerald-400 bg-emerald-950/40 px-2.5 py-1 rounded-md border border-emerald-500/20">パターン
+                                    B</span>
+                                <span class="text-[10px] text-slate-400">設定した役員報酬</span>
+                            </div>
+                            <div class="border-b border-slate-800/80 pb-2">
+                                <span class="text-[10px] text-slate-400 block">年間総支給（額面）</span>
+                                <span class="text-lg font-bold text-emerald-400 font-mono" id="sc-b-salary">0<span
+                                        class="text-xs font-normal"> 万円/年</span></span>
+                            </div>
+                            <div class="space-y-1.5 text-xs text-slate-300">
+                                <div class="flex justify-between text-emerald-300 font-semibold"><span>個人実質手取り:</span>
+                                    <span class="font-mono" id="sc-b-personal">0 万</span></div>
+                                <div class="flex justify-between text-blue-400 font-semibold"><span>法人最終内部留保:</span>
+                                    <span class="font-mono" id="sc-b-corp">0 万</span></div>
+                                <div class="flex justify-between text-slate-500"><span>社会保険料総額:</span> <span
+                                        class="font-mono text-red-400/80" id="sc-b-shaho">0 万</span></div>
+                                <div class="flex justify-between text-slate-500"><span>税金支払総額:</span> <span
+                                        class="font-mono text-red-400" id="sc-b-tax">0 万</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Scenario 3: Optimized -->
+                        <div
+                            class="bg-blue-950/10 p-4 rounded-xl border border-blue-500/30 flex flex-col gap-3 relative">
+                            <div
+                                class="absolute -top-2.5 right-4 bg-blue-500 text-slate-950 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                税理最適
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span
+                                    class="text-xs font-bold text-blue-400 bg-blue-950/40 px-2.5 py-1 rounded-md border border-blue-500/20">パターン
+                                    C</span>
+                                <span class="text-[10px] text-slate-400">税理・社保最適報酬</span>
+                            </div>
+                            <div class="border-b border-slate-800/80 pb-2">
+                                <span class="text-[10px] text-slate-400 block">年間最適総支給</span>
+                                <span class="text-lg font-bold text-blue-400 font-mono" id="sc-c-salary">0<span
+                                        class="text-xs font-normal"> 万円/年</span></span>
+                            </div>
+                            <div class="space-y-1.5 text-xs text-slate-300">
+                                <div class="flex justify-between text-emerald-300"><span>個人実質手取り:</span> <span
+                                        class="font-mono" id="sc-c-personal">0 万</span></div>
+                                <div class="flex justify-between text-blue-400"><span>法人最終内部留保:</span> <span
+                                        class="font-mono" id="sc-c-corp">0 万</span></div>
+                                <div class="flex justify-between text-slate-500"><span>社会保険料総額:</span> <span
+                                        class="font-mono text-red-400/80" id="sc-c-shaho">0 万</span></div>
+                                <div class="flex justify-between text-slate-500"><span>税金支払総額:</span> <span
+                                        class="font-mono text-red-400" id="sc-c-tax">0 万</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 hidden" id="optimization-alert">
+                        <div
+                            class="bg-blue-950/20 border border-blue-500/30 rounded-lg px-4 py-2 text-xs text-blue-300 flex items-center gap-2">
+                            <i data-lucide="lightbulb" class="w-4 h-4"></i>
+                            <span>パターンCの最適報酬に変更すると、個人＋法人の合計キャッシュが年間 約<strong id="opt-benefit-value">0</strong>万円
+                                改善する可能性があります（※当期キャッシュ基準）。</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Graphs Container (Dashboard) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Graph 1: Distribution Doughnut -->
+                    <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col">
+                        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+                            <span class="text-sm font-bold text-white">売上の配分ポートフォリオ</span>
+                            <span class="text-xs text-slate-500">（パターンB設定時）</span>
+                        </div>
+                        <div class="flex-grow flex items-center justify-center min-h-[220px]">
+                            <canvas id="chart-distribution" class="max-h-[240px]"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Breakdown list -->
+                    <div
+                        class="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col justify-between">
+                        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+                            <span class="text-sm font-bold text-white">財務・損益（P/L）精細内訳</span>
+                            <span class="text-xs text-slate-500">（万円）</span>
+                        </div>
+                        <div class="space-y-2 text-xs">
+                            <div class="flex justify-between items-center text-slate-400">
+                                <span class="font-medium text-slate-300">入力基準年間売上高</span>
+                                <span class="font-mono text-slate-200" id="breakdown-revenue-raw">0</span>
+                            </div>
+                            <div
+                                class="flex justify-between items-center text-slate-500 pl-4 border-b border-slate-800/40 pb-1">
+                                <span>├ 内：実質税抜売上高</span>
+                                <span class="font-mono" id="breakdown-revenue">0</span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-400 pt-1">
+                                <span class="font-medium text-slate-300">入力基準外注費・仕入等</span>
+                                <span class="font-mono text-red-300" id="breakdown-subcontracting-raw">0</span>
+                            </div>
+                            <div
+                                class="flex justify-between items-center text-slate-500 pl-4 border-b border-slate-800/40 pb-1">
+                                <span>├ 内：実質税抜外注費</span>
+                                <span class="font-mono text-red-400/80" id="breakdown-subcontracting">0</span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-300 pt-1 font-semibold">
+                                <span>売上総利益（実質税抜粗利）</span>
+                                <span class="font-mono" id="breakdown-gross-profit">0</span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-400 mt-1">
+                                <span class="font-medium text-slate-300">入力基準一般販管費（その他経費）</span>
+                                <span class="font-mono text-red-300" id="breakdown-sga-raw">0</span>
+                            </div>
+                            <div
+                                class="flex justify-between items-center text-slate-500 pl-4 border-b border-slate-800/40 pb-1">
+                                <span>├ 内：実質税抜販管費</span>
+                                <span class="font-mono text-red-400/80" id="breakdown-sga">0</span>
+                            </div>
+                            <div
+                                class="flex justify-between items-center text-amber-400 pt-1 font-semibold bg-amber-950/10 px-2 py-1 rounded">
+                                <span>役員報酬前営業利益</span>
+                                <span class="font-mono" id="breakdown-pre-salary-profit">0</span>
+                            </div>
+                            <div class="flex justify-between items-center text-emerald-400 pl-4 pt-1 font-semibold">
+                                <span>└ 役員報酬年間総支給（額面） (A)</span>
+                                <span class="font-mono" id="breakdown-salary">0</span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-400 pl-8">
+                                <span>├ 個人社会保険料 (個人負担)</span>
+                                <span class="font-mono text-red-400" id="breakdown-p-shaho">0</span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-400 pl-8">
+                                <span>├ 所得税 (各種控除適用)</span>
+                                <span class="font-mono text-red-400" id="breakdown-p-tax">0</span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-400 pl-8">
+                                <span>└ 住民税</span>
+                                <span class="font-mono text-red-400" id="breakdown-p-inhabitant">0</span>
+                            </div>
+                            <div
+                                class="flex justify-between items-center text-emerald-400 font-bold pl-6 bg-emerald-950/10 py-1.5 rounded">
+                                <span>【個人】実質手取り (①)</span>
+                                <span class="font-mono" id="breakdown-p-net">0</span>
+                            </div>
+                            <div
+                                class="flex justify-between items-center text-slate-400 border-t border-slate-800/40 pt-1.5 pl-4">
+                                <span
+                                    class="text-[11px] text-slate-500 font-semibold uppercase">消費税の内訳（売上・経費10%換算）</span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-400 pl-8">
+                                <span>├ 預かり消費税 (売上より)</span>
+                                <span class="font-mono text-emerald-500" id="breakdown-tax-received">0</span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-400 pl-8">
+                                <span>├ 支払い消費税 (外注・経費)</span>
+                                <span class="font-mono text-red-400" id="breakdown-tax-paid">0</span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-400 pl-8">
+                                <span>├ 国への申告納税額</span>
+                                <span class="font-mono text-amber-500" id="breakdown-tax-to-pay">0</span>
+                            </div>
+                            <div
+                                class="flex justify-between items-center text-slate-400 pl-8 border-b border-slate-800/40 pb-1.5">
+                                <span>└ 消費税の損益影響（税込経理時のみ）</span>
+                                <span class="font-mono" id="breakdown-tax-impact">0</span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-400 pt-1.5">
+                                <span class="font-semibold text-slate-300">課税対象法人所得</span>
+                                <span class="font-mono text-slate-300" id="breakdown-c-income">0</span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-400 pl-4">
+                                <span>├ 社会保険料 (会社負担)</span>
+                                <span class="font-mono text-red-400" id="breakdown-c-shaho">0</span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-400 pl-4">
+                                <span>└ 法人税等（実効税率＋均等割7万）</span>
+                                <span class="font-mono text-red-400" id="breakdown-c-tax">0</span>
+                            </div>
+                            <div class="flex justify-between items-center text-blue-400 font-bold pl-4 bg-blue-950/10 py-1.5 rounded"
+                                id="breakdown-reserve-row">
+                                <span>【法人】最終内部留保 (②)</span>
+                                <span class="font-mono" id="breakdown-c-reserve">0</span>
+                            </div>
+                            <div
+                                class="flex justify-between items-center text-slate-300 font-bold pl-4 border-t border-slate-700 pt-2 mt-1">
+                                <span>個人＋法人 合計キャッシュ (①+②)</span>
+                                <span class="font-mono" id="breakdown-grand-total">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- TAB CONTENT 2: Deep Analysis View -->
+            <div id="content-analysis" class="flex flex-col gap-6 hidden">
+
+                <!-- Optimization Trend Chart -->
+                <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-xl">
+                    <div class="flex flex-col gap-1 pb-4 border-b border-slate-800 mb-6">
+                        <span class="text-base font-bold text-white flex items-center gap-2">
+                            <i data-lucide="trending-up" class="text-emerald-400 w-5 h-5"></i>
+                            役員報酬額に応じた「個人手取り ⇄ 法人留保」トレードオフ曲線
+                        </span>
+                        <p class="text-xs text-slate-400">役員報酬（横軸）を変動させた場合、個人の手取りと会社の内部留保、および支払う税金コストがどう推移するかを表します。</p>
+                    </div>
+                    <div class="w-full min-h-[350px]">
+                        <canvas id="chart-trend" class="w-full h-80"></canvas>
+                    </div>
+                </div>
+
+                <!-- Analysis Advisory Insights -->
+                <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-xl">
+                    <div class="flex items-center gap-2 pb-4 border-b border-slate-800 mb-4">
+                        <i data-lucide="award" class="text-emerald-400 w-5 h-5"></i>
+                        <h3 class="text-base font-bold text-white">税務・社会保険から見る「戦略的アドバイス」</h3>
+                    </div>
+                    <div id="advisory-content" class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm leading-relaxed">
+                        <!-- Dynamic Insights generated by JS -->
+                    </div>
+                </div>
+
+                <!-- Tactical Checklist -->
+                <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-xl">
+                    <div class="flex items-center gap-2 pb-4 border-b border-slate-800 mb-4">
+                        <i data-lucide="check-square" class="text-emerald-400 w-5 h-5"></i>
+                        <h3 class="text-base font-bold text-white">合同会社で役員報酬（給与）を設定・支給するためのチェックリスト</h3>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-300">
+                        <div class="flex gap-2.5 items-start p-3 bg-slate-900/50 rounded-lg border border-slate-800">
+                            <input type="checkbox" checked
+                                class="mt-0.5 rounded border-slate-700 bg-slate-800 text-emerald-500 focus:ring-emerald-500">
+                            <div>
+                                <strong class="text-white block mb-0.5">業務執行社員の同意書（決定書）の作成</strong>
+                                合同会社では、役員報酬の金額や改定時期などを記載した「決定書（同意書）」を、事業年度開始から3ヶ月以内に作成・保管する必要があります（定期同額給与の要件）。
+                            </div>
+                        </div>
+                        <div class="flex gap-2.5 items-start p-3 bg-slate-900/50 rounded-lg border border-slate-800">
+                            <input type="checkbox"
+                                class="mt-0.5 rounded border-slate-700 bg-slate-800 text-emerald-500 focus:ring-emerald-500">
+                            <div>
+                                <strong class="text-white block mb-0.5">新規社会保険適用手続き</strong>
+                                これまで無報酬で社保未加入だった場合、最初の給与支払いに合わせ、年金事務所へ「新規適用届」および「被保険者資格取得届」を提出します（事実発生から5日以内）。
+                            </div>
+                        </div>
+                        <div class="flex gap-2.5 items-start p-3 bg-slate-900/50 rounded-lg border border-slate-800">
+                            <input type="checkbox"
+                                class="mt-0.5 rounded border-slate-700 bg-slate-800 text-emerald-500 focus:ring-emerald-500">
+                            <div>
+                                <strong class="text-white block mb-0.5">源泉所得税の納期の特例申請</strong>
+                                給与所得者が常時10人未満の場合、「源泉所得税の納期の特例の承認に関する申請書」を税務署へ提出すると、毎月の納付を年2回（7月・1月）にまとめて簡素化できます。
+                            </div>
+                        </div>
+                        <div class="flex gap-2.5 items-start p-3 bg-slate-900/50 rounded-lg border border-slate-800">
+                            <input type="checkbox"
+                                class="mt-0.5 rounded border-slate-700 bg-slate-800 text-emerald-500 focus:ring-emerald-500">
+                            <div>
+                                <strong class="text-white block mb-0.5">小規模企業共済等への加入検討</strong>
+                                個人手取りを最大化するため、代表者個人の所得から全額所得控除できる「小規模企業共済（月最大7万円）」や「iDeCo」を組み合わせるのが有効な節税策です。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Scripts / Simulations Logic -->
+    <script>
+        // ===== 税制定数（2025年改正・令和7年度準拠） =====
+        // 厚生年金保険料率18.3%（折半9.15%）／健康保険は協会けんぽ料率（折半=料率/2）
+        // 介護保険料率1.59%（折半0.795%）／標準報酬月額上限：厚年65万・健保139万・下限8.8万
+        const PENSION_RATE_HALF = 0.0915;      // 厚生年金 折半
+        const KAIGO_RATE_HALF = 0.00795;       // 介護保険 折半（1.59%/2）
+        const PENSION_SMR_CAP = 65;            // 厚生年金 標準報酬月額 上限（万円）
+        const HEALTH_SMR_CAP = 139;            // 健康保険 標準報酬月額 上限（万円）
+        const SMR_FLOOR = 8.8;                 // 標準報酬月額 下限（万円）
+
+        // Tax mode states
+        let isTaxIncluded = false; // default to Tax Exclude (税抜)
+
+        // DOM Elements
+        let btnTaxExclude, btnTaxInclude;
+        let inputRevenue, numRevenue, labelRevenue;
+        let inputSubcontracting, numSubcontracting, labelSubcontracting;
+        let inputSga, numSga, labelSga;
+        let inputSalary, numSalary, labelSalary, labelSalaryAnnual;
+        let selectAge, selectHealthRate, inputProvident;
+        let selectTaxType, selectIndustry, industrySelectContainer, selectAccounting;
+
+        let bTaxReceived, bTaxPaid, bTaxToPay, bTaxImpact;
+        let tabSummary, tabAnalysis, contentSummary, contentAnalysis;
+
+        let kpiGrossProfit, kpiGrossRatio, kpiPreSalaryProfit;
+        let kpiPersonalGross, kpiPersonalGrossMonthly, kpiPersonalTakehome;
+        let kpiPersonalMonthly, kpiCorpReserve;
+
+        let scBCorporate, scBSalary, scBPersonal, scBTax, scBShaho;
+        let scACorp, scATax, scAShaho;
+        let scCSalary, scCPersonal, scCCorp, scCTax, scCShaho;
+        let optBenefitValue, optimizationAlert;
+
+        let bRevenueRaw, bRevenue;
+        let bSubcontractingRaw, bSubcontracting;
+        let bGrossProfit, bSgaRaw, bSga;
+        let bPreSalaryProfit, bSalary;
+        let bPShaho, bPTax, bPInhabitant, bPNet;
+        let bCIncome, bCShaho, bCTax, bCReserve;
+        let bGrandTotal, advisoryContent;
+
+        // Safe DOM caching
+        function cacheElements() {
+            btnTaxExclude = document.getElementById('btn-tax-exclude');
+            btnTaxInclude = document.getElementById('btn-tax-include');
+            inputRevenue = document.getElementById('input-revenue');
+            numRevenue = document.getElementById('num-revenue');
+            labelRevenue = document.getElementById('label-revenue');
+            inputSubcontracting = document.getElementById('input-subcontracting');
+            numSubcontracting = document.getElementById('num-subcontracting');
+            labelSubcontracting = document.getElementById('label-subcontracting');
+            inputSga = document.getElementById('input-sga');
+            numSga = document.getElementById('num-sga');
+            labelSga = document.getElementById('label-sga');
+            inputSalary = document.getElementById('input-salary');
+            numSalary = document.getElementById('num-salary');
+            labelSalary = document.getElementById('label-salary');
+            labelSalaryAnnual = document.getElementById('label-salary-annual');
+            selectAge = document.getElementById('select-age');
+            selectHealthRate = document.getElementById('select-health-rate');
+            inputProvident = document.getElementById('input-provident');
+            selectTaxType = document.getElementById('select-tax-type');
+            selectIndustry = document.getElementById('select-industry');
+            industrySelectContainer = document.getElementById('industry-select-container');
+            selectAccounting = document.getElementById('select-accounting');
+
+            bTaxReceived = document.getElementById('breakdown-tax-received');
+            bTaxPaid = document.getElementById('breakdown-tax-paid');
+            bTaxToPay = document.getElementById('breakdown-tax-to-pay');
+            bTaxImpact = document.getElementById('breakdown-tax-impact');
+
+            tabSummary = document.getElementById('tab-summary');
+            tabAnalysis = document.getElementById('tab-analysis');
+            contentSummary = document.getElementById('content-summary');
+            contentAnalysis = document.getElementById('content-analysis');
+
+            kpiGrossProfit = document.getElementById('kpi-gross-profit');
+            kpiGrossRatio = document.getElementById('kpi-gross-ratio');
+            kpiPreSalaryProfit = document.getElementById('kpi-pre-salary-profit');
+
+            kpiPersonalGross = document.getElementById('kpi-personal-gross');
+            kpiPersonalGrossMonthly = document.getElementById('kpi-personal-gross-monthly');
+            kpiPersonalTakehome = document.getElementById('kpi-personal-takehome');
+            kpiPersonalMonthly = document.getElementById('kpi-personal-monthly');
+            kpiCorpReserve = document.getElementById('kpi-corp-reserve');
+
+            scBCorporate = document.getElementById('sc-b-corp');
+            scBSalary = document.getElementById('sc-b-salary');
+            scBPersonal = document.getElementById('sc-b-personal');
+            scBTax = document.getElementById('sc-b-tax');
+            scBShaho = document.getElementById('sc-b-shaho');
+
+            scACorp = document.getElementById('sc-a-corp');
+            scATax = document.getElementById('sc-a-tax');
+            scAShaho = document.getElementById('sc-a-shaho');
+
+            scCSalary = document.getElementById('sc-c-salary');
+            scCPersonal = document.getElementById('sc-c-personal');
+            scCCorp = document.getElementById('sc-c-corp');
+            scCTax = document.getElementById('sc-c-tax');
+            scCShaho = document.getElementById('sc-c-shaho');
+
+            optBenefitValue = document.getElementById('opt-benefit-value');
+            optimizationAlert = document.getElementById('optimization-alert');
+
+            bRevenueRaw = document.getElementById('breakdown-revenue-raw');
+            bRevenue = document.getElementById('breakdown-revenue');
+            bSubcontractingRaw = document.getElementById('breakdown-subcontracting-raw');
+            bSubcontracting = document.getElementById('breakdown-subcontracting');
+            bGrossProfit = document.getElementById('breakdown-gross-profit');
+            bSgaRaw = document.getElementById('breakdown-sga-raw');
+            bSga = document.getElementById('breakdown-sga');
+            bPreSalaryProfit = document.getElementById('breakdown-pre-salary-profit');
+            bSalary = document.getElementById('breakdown-salary');
+
+            bPShaho = document.getElementById('breakdown-p-shaho');
+            bPTax = document.getElementById('breakdown-p-tax');
+            bPInhabitant = document.getElementById('breakdown-p-inhabitant');
+            bPNet = document.getElementById('breakdown-p-net');
+
+            bCIncome = document.getElementById('breakdown-c-income');
+            bCShaho = document.getElementById('breakdown-c-shaho');
+            bCTax = document.getElementById('breakdown-c-tax');
+            bCReserve = document.getElementById('breakdown-c-reserve');
+
+            bGrandTotal = document.getElementById('breakdown-grand-total');
+            advisoryContent = document.getElementById('advisory-content');
+        }
+
+        function safeSetText(el, val) { if (el) el.innerText = val; }
+        function safeSetHTML(el, val) { if (el) el.innerHTML = val; }
+        function safeSetClass(el, className) { if (el) el.className = className; }
+
+        // Charts
+        let chartDist = null;
+        let chartTrend = null;
+
+        function setupSyncedInputs(sliderId, numberId) {
+            const slider = document.getElementById(sliderId);
+            const number = document.getElementById(numberId);
+            if (!slider || !number) return;
+
+            slider.addEventListener('input', (e) => {
+                number.value = e.target.value;
+                calculateAll();
+            });
+            number.addEventListener('input', (e) => {
+                let val = parseFloat(e.target.value);
+                if (isNaN(val)) val = 0;
+                slider.value = Math.max(parseFloat(slider.min), Math.min(parseFloat(slider.max), val));
+                calculateAll();
+            });
+        }
+
+        // ===== 所得税の基礎控除（2025年改正：合計所得金額に応じて段階的） =====
+        // 単位：万円。合計所得金額（給与所得）をもとに判定
+        function getBasicDeductionIncomeTax(totalIncome) {
+            if (totalIncome <= 132) return 95;
+            if (totalIncome <= 336) return 88;
+            if (totalIncome <= 489) return 68;
+            if (totalIncome <= 655) return 63;
+            if (totalIncome <= 2350) return 58;
+            if (totalIncome <= 2400) return 48;
+            if (totalIncome <= 2450) return 32;
+            if (totalIncome <= 2500) return 16;
+            return 0;
+        }
+
+        // ===== 住民税の基礎控除（合計所得2400万円以下は43万円） =====
+        function getBasicDeductionResidentTax(totalIncome) {
+            if (totalIncome <= 2400) return 43;
+            if (totalIncome <= 2450) return 29;
+            if (totalIncome <= 2500) return 15;
+            return 0;
+        }
+
+        // ===== 給与所得控除（2025年改正：最低保障65万円） =====
+        function getEmploymentIncomeDeduction(annualSalary) {
+            if (annualSalary <= 0) return 0;
+            if (annualSalary <= 190) return 65;            // 最低保障65万（190万円まで）
+            if (annualSalary <= 360) return annualSalary * 0.3 + 8;
+            if (annualSalary <= 660) return annualSalary * 0.2 + 44;
+            if (annualSalary <= 850) return annualSalary * 0.1 + 110;
+            return 195;                                     // 上限195万
+        }
+
+        // Precision Tax and Social Insurance Calculation Logic
+        function calculateFinancials(rawRevenue, rawSubcontracting, rawSga, monthlySalary, ageGroup, providentDeductionType, taxType, industryRate, healthRate, accountingMethod) {
+            const revenue = isTaxIncluded ? rawRevenue / 1.1 : rawRevenue;
+            const subcontracting = isTaxIncluded ? rawSubcontracting / 1.1 : rawSubcontracting;
+            const sga = isTaxIncluded ? rawSga / 1.1 : rawSga;
+
+            const annualSalary = monthlySalary * 12;
+
+            // 1. 社会保険料（標準報酬月額の上限・下限を反映）
+            let monthlyShahoEmployer = 0;
+            let monthlyShahoEmployee = 0;
+
+            if (monthlySalary > 0) {
+                // 標準報酬月額：下限8.8万、厚年上限65万、健保上限139万
+                const pensionSMR = Math.min(Math.max(monthlySalary, SMR_FLOOR), PENSION_SMR_CAP);
+                const healthSMR = Math.min(Math.max(monthlySalary, SMR_FLOOR), HEALTH_SMR_CAP);
+
+                const pensionPremium = pensionSMR * PENSION_RATE_HALF;
+                // 健康保険折半率＝料率/2、40歳以上は介護分0.795%を加算
+                const healthRateHalf = healthRate / 2 + (ageGroup === 'over40' ? KAIGO_RATE_HALF : 0);
+                const healthPremium = healthSMR * healthRateHalf;
+
+                monthlyShahoEmployer = pensionPremium + healthPremium;
+                monthlyShahoEmployee = pensionPremium + healthPremium;
+            }
+
+            const annualShahoEmployer = monthlyShahoEmployer * 12;
+            const annualShahoEmployee = monthlyShahoEmployee * 12;
+
+            // 2. 消費税の計算
+            const taxReceived = revenue * 0.10;
+            const taxPaidOnExpenses = (subcontracting + sga) * 0.10;
+            const netTaxCollected = taxReceived - taxPaidOnExpenses;
+
+            let consumptionTaxToPay = 0;
+            if (taxType === 'principle') {
+                consumptionTaxToPay = Math.max(0, netTaxCollected);
+            } else if (taxType === 'simplified') {
+                consumptionTaxToPay = Math.max(0, taxReceived * (1 - industryRate));
+            } else if (taxType === 'twowari') {
+                consumptionTaxToPay = Math.max(0, taxReceived * 0.20);
+            } else {
+                consumptionTaxToPay = 0; // 免税
+            }
+
+            // 消費税の損益影響：
+            //  ・税抜経理 → 納付額は損益に乗らない（仮受・仮払の差額決済）。影響=0。
+            //  ・税込経理 → 「預かった税 − 申告納付額」が雑収入(益税)/雑損失となり損益に算入。
+            //    免税事業者は通常税込経理で、預かり全額(netTaxCollected相当)が益税として残る。
+            let consumptionTaxImpact = 0;
+            if (accountingMethod === 'included') {
+                // 税込経理：売上・経費を税込で記帳し、納付額を租税公課に計上したのと同義
+                // 損益影響 = (預かり - 支払い) - 納付額
+                consumptionTaxImpact = netTaxCollected - consumptionTaxToPay;
+            } else {
+                // 税抜経理：原則として損益影響なし。
+                // ただし簡易課税・2割特例・免税では「実際の納付額」が
+                // 仮受-仮払の差額と異なるため、その差額が益税(雑収入)/損税として発生する。
+                if (taxType !== 'principle') {
+                    consumptionTaxImpact = netTaxCollected - consumptionTaxToPay;
+                } else {
+                    consumptionTaxImpact = 0;
+                }
+            }
+
+            // 3. 法人所得・法人税
+            const grossProfit = Math.max(0, revenue - subcontracting);
+            const preSalaryOperatingProfit = Math.max(0, grossProfit - sga);
+
+            // 法人課税所得 = 報酬前営業利益 - 役員報酬 - 会社社保負担 + 消費税損益影響
+            const corpIncomeBeforeTax = preSalaryOperatingProfit - annualSalary - annualShahoEmployer + consumptionTaxImpact;
+            const corpTaxableIncome = Math.max(0, corpIncomeBeforeTax);
+
+            // 法人税等（実効税率：800万以下 約25% / 超 約34%）＋ 均等割7万（赤字でも発生）
+            let corpTaxes = 7;
+            if (corpTaxableIncome > 0) {
+                if (corpTaxableIncome <= 800) {
+                    corpTaxes += corpTaxableIncome * 0.25;
+                } else {
+                    corpTaxes += (800 * 0.25) + ((corpTaxableIncome - 800) * 0.34);
+                }
+            }
+
+            const corpReserve = corpIncomeBeforeTax - corpTaxes;
+
+            // 4. 個人の税金
+            const employmentIncomeDeduction = getEmploymentIncomeDeduction(annualSalary);
+            const employmentIncome = Math.max(0, annualSalary - employmentIncomeDeduction); // 給与所得（=合計所得）
+
+            // 社会保険料控除 + 小規模企業共済等掛金控除
+            let providentDeduction = 0;
+            if (providentDeductionType === '2.3') providentDeduction = 2.3 * 12;
+            if (providentDeductionType === '7.0') providentDeduction = 7 * 12;
+            if (providentDeductionType === '9.3') providentDeduction = 9.3 * 12;
+
+            // 所得税：基礎控除は合計所得（給与所得）に応じて段階判定
+            const basicDeductionIT = getBasicDeductionIncomeTax(employmentIncome);
+            const taxableIncomeIT = Math.max(0, employmentIncome - annualShahoEmployee - providentDeduction - basicDeductionIT);
+
+            let individualIncomeTax = 0;
+            if (taxableIncomeIT > 0) {
+                if (taxableIncomeIT <= 195) individualIncomeTax = taxableIncomeIT * 0.05;
+                else if (taxableIncomeIT <= 330) individualIncomeTax = taxableIncomeIT * 0.10 - 9.75;
+                else if (taxableIncomeIT <= 695) individualIncomeTax = taxableIncomeIT * 0.20 - 42.75;
+                else if (taxableIncomeIT <= 900) individualIncomeTax = taxableIncomeIT * 0.23 - 63.6;
+                else if (taxableIncomeIT <= 1800) individualIncomeTax = taxableIncomeIT * 0.33 - 153.6;
+                else if (taxableIncomeIT <= 4000) individualIncomeTax = taxableIncomeIT * 0.40 - 279.6;
+                else individualIncomeTax = taxableIncomeIT * 0.45 - 479.6;
+            }
+            individualIncomeTax = individualIncomeTax * 1.021; // 復興特別所得税
+
+            // 住民税：基礎控除43万円で別計算（所得割10% + 均等割0.5万）
+            const basicDeductionRT = getBasicDeductionResidentTax(employmentIncome);
+            const taxableIncomeRT = Math.max(0, employmentIncome - annualShahoEmployee - providentDeduction - basicDeductionRT);
+            let individualResidentTax = 0;
+            if (taxableIncomeRT > 0) {
+                individualResidentTax = taxableIncomeRT * 0.10 + 0.5;
+            }
+
+            const personalNetTakehome = Math.max(0, annualSalary - annualShahoEmployee - individualIncomeTax - individualResidentTax);
+            const totalCombinedCash = corpReserve + personalNetTakehome;
+            const totalTaxAndShahoLoss = (annualShahoEmployer + annualShahoEmployee + corpTaxes + individualIncomeTax + individualResidentTax + Math.max(0, consumptionTaxToPay));
+
+            return {
+                grossProfit,
+                preSalaryOperatingProfit,
+                salaryAnnual: annualSalary,
+                corpIncomeBeforeTax,
+                corpTaxableIncome,
+                corpTaxes,
+                corpReserve,
+                pShaho: annualShahoEmployee,
+                cShaho: annualShahoEmployer,
+                pTax: individualIncomeTax,
+                pInhabitant: individualResidentTax,
+                personalNet: personalNetTakehome,
+                totalCombinedCash,
+                totalTaxAndShahoLoss,
+                taxReceived,
+                taxPaidOnExpenses,
+                consumptionTaxToPay,
+                consumptionTaxImpact,
+                revenueEx: revenue,
+                subcontractingEx: subcontracting,
+                sgaEx: sga
+            };
+        }
+
+        // 個人＋法人の合計キャッシュが最大になる報酬を探索
+        function findOptimalSalary(revenue, subcontracting, sga, ageGroup, providentDeductionType, taxType, industryRate, healthRate, accountingMethod) {
+            let maxCash = -Infinity;
+            let optimalMonthlySalary = 0;
+            let optimalResult = null;
+
+            const tempResult = calculateFinancials(revenue, subcontracting, sga, 0, ageGroup, providentDeductionType, taxType, industryRate, healthRate, accountingMethod);
+            const preSalaryOperatingProfit = tempResult.preSalaryOperatingProfit;
+            const maxMonthlySim = Math.min(300, Math.ceil(preSalaryOperatingProfit / 12));
+
+            for (let m = 0; m <= maxMonthlySim; m += 1) {
+                const res = calculateFinancials(revenue, subcontracting, sga, m, ageGroup, providentDeductionType, taxType, industryRate, healthRate, accountingMethod);
+                if (res.totalCombinedCash > maxCash) {
+                    maxCash = res.totalCombinedCash;
+                    optimalMonthlySalary = m;
+                    optimalResult = res;
+                }
+            }
+            if (!optimalResult) {
+                optimalResult = calculateFinancials(revenue, subcontracting, sga, 0, ageGroup, providentDeductionType, taxType, industryRate, healthRate, accountingMethod);
+            }
+            return { monthly: optimalMonthlySalary, result: optimalResult };
+        }
+
+        function calculateAll() {
+            const rawRevenue = parseFloat(document.getElementById('input-revenue')?.value || 1200);
+            const rawSubcontracting = parseFloat(document.getElementById('input-subcontracting')?.value || 200);
+            const rawSga = parseFloat(document.getElementById('input-sga')?.value || 150);
+            const monthlySalary = parseFloat(document.getElementById('input-salary')?.value || 40);
+            const ageGroup = document.getElementById('select-age')?.value || 'over40';
+            const provident = document.getElementById('input-provident')?.value || '9.3';
+            const taxType = document.getElementById('select-tax-type')?.value || 'simplified';
+            const industryRate = parseFloat(document.getElementById('select-industry')?.value || 0.5);
+            const healthRate = parseFloat(document.getElementById('select-health-rate')?.value || 0.10);
+            const accountingMethod = document.getElementById('select-accounting')?.value || 'excluded';
+
+            const taxModeSuffix = isTaxIncluded ? ' 万円 (税込)' : ' 万円 (税抜)';
+            if (labelRevenue) labelRevenue.innerText = rawRevenue.toLocaleString() + taxModeSuffix;
+            if (labelSubcontracting) labelSubcontracting.innerText = rawSubcontracting.toLocaleString() + taxModeSuffix;
+            if (labelSga) labelSga.innerText = rawSga.toLocaleString() + taxModeSuffix;
+            if (labelSalary) labelSalary.innerText = monthlySalary.toLocaleString() + ' 万円';
+            if (labelSalaryAnnual) labelSalaryAnnual.innerText = (monthlySalary * 12).toLocaleString();
+
+            const currentRes = calculateFinancials(rawRevenue, rawSubcontracting, rawSga, monthlySalary, ageGroup, provident, taxType, industryRate, healthRate, accountingMethod);
+            const optimalRes = findOptimalSalary(rawRevenue, rawSubcontracting, rawSga, ageGroup, provident, taxType, industryRate, healthRate, accountingMethod);
+            const zeroRes = calculateFinancials(rawRevenue, rawSubcontracting, rawSga, 0, ageGroup, provident, taxType, industryRate, healthRate, accountingMethod);
+
+            safeSetText(kpiGrossProfit, Math.round(currentRes.grossProfit).toLocaleString());
+            safeSetText(kpiGrossRatio, currentRes.revenueEx > 0 ? Math.round((currentRes.grossProfit / currentRes.revenueEx) * 100) + '%' : '0%');
+            safeSetText(kpiPreSalaryProfit, Math.round(currentRes.preSalaryOperatingProfit).toLocaleString());
+
+            safeSetText(kpiPersonalGross, Math.round(monthlySalary * 12).toLocaleString());
+            safeSetText(kpiPersonalGrossMonthly, Math.round(monthlySalary).toLocaleString());
+            safeSetText(kpiPersonalTakehome, Math.round(currentRes.personalNet).toLocaleString());
+            safeSetText(kpiPersonalMonthly, Math.round(currentRes.personalNet / 12).toLocaleString());
+
+            const corpNetVal = Math.round(currentRes.corpReserve);
+            safeSetText(kpiCorpReserve, corpNetVal.toLocaleString());
+            const cardCorp = document.getElementById('card-corp-reserve');
+            const kpiStatus = document.getElementById('kpi-corp-status');
+            if (corpNetVal < 0) {
+                if (cardCorp) cardCorp.className = "bg-slate-950 p-4 rounded-xl border border-red-500/40 shadow-lg ring-2 ring-red-500/20";
+                safeSetText(kpiStatus, "⚠️ 法人赤字（自己資本目減り）");
+            } else {
+                if (cardCorp) cardCorp.className = "bg-slate-950 p-4 rounded-xl border border-blue-500/20 shadow-lg ring-1 ring-blue-500/20";
+                safeSetText(kpiStatus, "法人の手残り（黒字留保）");
+            }
+
+            const getShahoTotal = (res) => Math.round(res.pShaho + res.cShaho);
+            const getTaxTotal = (res) => Math.round(res.pTax + res.pInhabitant + res.corpTaxes + Math.max(0, res.consumptionTaxToPay));
+
+            safeSetText(scACorp, Math.round(zeroRes.corpReserve) + ' 万');
+            safeSetText(scAShaho, getShahoTotal(zeroRes) + ' 万');
+            safeSetText(scATax, getTaxTotal(zeroRes) + ' 万');
+
+            safeSetHTML(scBSalary, (monthlySalary * 12).toLocaleString() + '<span class="text-xs font-normal"> 万/年 (' + monthlySalary + '万/月)</span>');
+            safeSetText(scBPersonal, Math.round(currentRes.personalNet) + ' 万');
+            safeSetHTML(scBCorporate, Math.round(currentRes.corpReserve) + ' 万');
+            safeSetText(scBShaho, getShahoTotal(currentRes) + ' 万');
+            safeSetText(scBTax, getTaxTotal(currentRes) + ' 万');
+
+            safeSetHTML(scCSalary, (optimalRes.monthly * 12).toLocaleString() + '<span class="text-xs font-normal"> 万/年 (' + optimalRes.monthly + '万/月)</span>');
+            safeSetText(scCPersonal, Math.round(optimalRes.result.personalNet) + ' 万');
+            safeSetHTML(scCCorp, Math.round(optimalRes.result.corpReserve) + ' 万');
+            safeSetText(scCShaho, getShahoTotal(optimalRes.result) + ' 万');
+            safeSetText(scCTax, getTaxTotal(optimalRes.result) + ' 万');
+
+            const benefit = Math.round(optimalRes.result.totalCombinedCash - currentRes.totalCombinedCash);
+            if (benefit > 5 && monthlySalary !== optimalRes.monthly) {
+                safeSetText(optBenefitValue, benefit);
+                if (optimizationAlert) optimizationAlert.classList.remove('hidden');
+            } else {
+                if (optimizationAlert) optimizationAlert.classList.add('hidden');
+            }
+
+            safeSetText(bRevenueRaw, rawRevenue.toLocaleString() + (isTaxIncluded ? ' (税込)' : ' (税抜)'));
+            safeSetText(bRevenue, Math.round(currentRes.revenueEx).toLocaleString());
+            safeSetText(bSubcontractingRaw, rawSubcontracting.toLocaleString() + (isTaxIncluded ? ' (税込)' : ' (税抜)'));
+            safeSetText(bSubcontracting, Math.round(currentRes.subcontractingEx).toLocaleString());
+            safeSetText(bGrossProfit, Math.round(currentRes.grossProfit).toLocaleString());
+            safeSetText(bSgaRaw, rawSga.toLocaleString() + (isTaxIncluded ? ' (税込)' : ' (税抜)'));
+            safeSetText(bSga, Math.round(currentRes.sgaEx).toLocaleString());
+            safeSetText(bPreSalaryProfit, Math.round(currentRes.preSalaryOperatingProfit).toLocaleString());
+            safeSetText(bSalary, Math.round(monthlySalary * 12).toLocaleString());
+            safeSetText(bPShaho, Math.round(currentRes.pShaho).toLocaleString());
+            safeSetText(bPTax, Math.round(currentRes.pTax).toLocaleString());
+            safeSetText(bPInhabitant, Math.round(currentRes.pInhabitant).toLocaleString());
+            safeSetText(bPNet, Math.round(currentRes.personalNet).toLocaleString());
+
+            safeSetText(bCIncome, Math.round(currentRes.corpIncomeBeforeTax).toLocaleString());
+            safeSetText(bCShaho, Math.round(currentRes.cShaho).toLocaleString());
+            safeSetText(bCTax, Math.round(currentRes.corpTaxes).toLocaleString());
+
+            safeSetText(bTaxReceived, Math.round(currentRes.taxReceived).toLocaleString());
+            safeSetText(bTaxPaid, Math.round(currentRes.taxPaidOnExpenses).toLocaleString());
+            safeSetText(bTaxToPay, Math.round(currentRes.consumptionTaxToPay).toLocaleString());
+
+            const impactSign = currentRes.consumptionTaxImpact >= 0 ? '+' : '';
+            safeSetText(bTaxImpact, impactSign + Math.round(currentRes.consumptionTaxImpact).toLocaleString());
+            if (currentRes.consumptionTaxImpact >= 0) {
+                safeSetClass(bTaxImpact, "font-mono text-emerald-400 font-medium");
+            } else {
+                safeSetClass(bTaxImpact, "font-mono text-rose-400 font-medium");
+            }
+
+            safeSetText(bCReserve, Math.round(currentRes.corpReserve).toLocaleString());
+            const bReserveRow = document.getElementById('breakdown-reserve-row');
+            if (corpNetVal < 0) {
+                if (bReserveRow) bReserveRow.className = "flex justify-between items-center text-red-400 font-bold pl-4 bg-red-950/20 py-1.5 rounded border border-red-500/20";
+            } else {
+                if (bReserveRow) bReserveRow.className = "flex justify-between items-center text-blue-400 font-bold pl-4 bg-blue-950/10 py-1.5 rounded";
+            }
+
+            safeSetText(bGrandTotal, Math.round(currentRes.totalCombinedCash).toLocaleString());
+
+            renderDoughnut(currentRes.revenueEx, currentRes.subcontractingEx, currentRes.sgaEx, currentRes);
+            renderTrendChart(rawRevenue, rawSubcontracting, rawSga, ageGroup, provident, monthlySalary, optimalRes.monthly, taxType, industryRate, healthRate, accountingMethod);
+            updateAdvisory(rawRevenue, rawSubcontracting, rawSga, currentRes, optimalRes, taxType);
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function renderDoughnut(revenue, subcontracting, sga, res) {
+            const chartCanvas = document.getElementById('chart-distribution');
+            if (!chartCanvas) return;
+            const ctx = chartCanvas.getContext('2d');
+
+            const safeReserveVal = res.corpReserve > 0 ? Math.round(res.corpReserve) : 0;
+            const dataValues = [
+                Math.round(res.personalNet),
+                safeReserveVal,
+                Math.round(subcontracting),
+                Math.round(sga),
+                Math.round(res.totalTaxAndShahoLoss)
+            ];
+
+            if (chartDist) {
+                chartDist.data.datasets[0].data = dataValues;
+                chartDist.update();
+            } else if (window.Chart) {
+                chartDist = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['【個人】実質手取り', '【法人】最終内部留保', '外注費', '一般販管費', '国・社保への支払コスト'],
+                        datasets: [{
+                            data: dataValues,
+                            backgroundColor: ['#34d399', '#60a5fa', '#f43f5e', '#f59e0b', '#ef4444'],
+                            borderWidth: 2,
+                            borderColor: '#0f172a'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } }
+                        }
+                    }
+                });
+            }
+        }
+
+        function renderTrendChart(rawRevenue, rawSubcontracting, rawSga, ageGroup, provident, currentMonthlySalary, optimalMonthlySalary, taxType, industryRate, healthRate, accountingMethod) {
+            if (contentAnalysis && contentAnalysis.classList.contains('hidden')) return;
+
+            const chartCanvas = document.getElementById('chart-trend');
+            if (!chartCanvas) return;
+            const ctx = chartCanvas.getContext('2d');
+
+            const revenue = isTaxIncluded ? rawRevenue / 1.1 : rawRevenue;
+            const subcontracting = isTaxIncluded ? rawSubcontracting / 1.1 : rawSubcontracting;
+            const sga = isTaxIncluded ? rawSga / 1.1 : rawSga;
+
+            const grossProfit = Math.max(0, revenue - subcontracting);
+            const preSalaryOperatingProfit = Math.max(0, grossProfit - sga);
+            const maxLimit = Math.min(300, Math.ceil(preSalaryOperatingProfit / 12));
+            const step = Math.max(5, Math.ceil(maxLimit / 15));
+
+            const labels = [];
+            const personalNetData = [];
+            const corpReserveData = [];
+            const totalTaxData = [];
+
+            for (let m = 0; m <= maxLimit + step; m += step) {
+                labels.push(m + '万/月');
+                const r = calculateFinancials(rawRevenue, rawSubcontracting, rawSga, m, ageGroup, provident, taxType, industryRate, healthRate, accountingMethod);
+                personalNetData.push(Math.round(r.personalNet));
+                corpReserveData.push(Math.round(r.corpReserve));
+                totalTaxData.push(Math.round(r.totalTaxAndShahoLoss));
+            }
+
+            if (chartTrend) {
+                chartTrend.data.labels = labels;
+                chartTrend.data.datasets[0].data = personalNetData;
+                chartTrend.data.datasets[1].data = corpReserveData;
+                chartTrend.data.datasets[2].data = totalTaxData;
+                chartTrend.update();
+            } else if (window.Chart) {
+                chartTrend = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: '個人手取り (①)', data: personalNetData, borderColor: '#34d399', backgroundColor: 'rgba(52, 211, 153, 0.1)', tension: 0.3, fill: false },
+                            { label: '法人内部留保 (②)', data: corpReserveData, borderColor: '#60a5fa', backgroundColor: 'rgba(96, 165, 250, 0.1)', tension: 0.3, fill: false },
+                            { label: '税金・社保負担総額', data: totalTaxData, borderColor: '#ef4444', backgroundColor: 'transparent', borderDash: [4, 4], tension: 0.1, fill: false }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: { legend: { position: 'top', labels: { color: '#94a3b8', font: { size: 11 } } } },
+                        scales: {
+                            x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', font: { size: 10 } } },
+                            y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', font: { size: 10 } } }
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateAdvisory(rawRevenue, rawSubcontracting, rawSga, currentRes, optimalRes, taxType) {
+            let leftCol = "";
+            let rightCol = "";
+
+            const optAnnualSalary = optimalRes.monthly * 12;
+            const preSalaryOperatingProfit = currentRes.preSalaryOperatingProfit;
+
+            leftCol += `
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-2 text-emerald-400 font-bold">
+                        <i data-lucide="compass" class="w-4 h-4"></i>
+                        <span>【個人視点】給与設定と実質手取り</span>
+                    </div>
+                    <p class="text-slate-300 text-xs">
+                        現在の役員報酬設定では、年間額面総支給 <strong>${(currentRes.salaryAnnual).toLocaleString()}万円</strong> に対して、個人負担の社会保険料・所得税・住民税が引かれ、<strong>社長の手元に残る実質手取り（可処分所得）は年間 ${Math.round(currentRes.personalNet)}万円（月額換算約 ${Math.round(currentRes.personalNet / 12)}万円）</strong>となります。
+                    </p>
+                    <p class="text-slate-300 text-xs">
+                        給与総支給を引き上げると給与所得控除による経費化メリットを受けられますが、累進課税と社会保険料（労使合計で報酬の約30%）の負担が手取り率を押し下げます。自身の生活コストをベースに、分離して最適な支給額を決定してください。
+                    </p>
+                </div>
+            `;
+
+            let adviceOfMax = "";
+            if (preSalaryOperatingProfit <= 0) {
+                adviceOfMax = `現在、本業利益が赤字（-${Math.abs(Math.round(preSalaryOperatingProfit))}万円）のため、役員報酬を支給すると法人の資金繰りに深刻な影響を与えます。`;
+            } else {
+                adviceOfMax = `役員報酬を<strong>年間総支給 ${optAnnualSalary}万円（月額 ${optimalRes.monthly}万円）</strong>に設定すると、当期の個人＋法人の合計キャッシュ（税・社保控除後）が最大化されます。ただし社会保険料は将来の年金原資でもあるため、単純な当期コストとして捉えないことが重要です。`;
+            }
+
+            rightCol += `
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-2 text-blue-400 font-bold">
+                        <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                        <span>【法人視点】会社留保と納税構造</span>
+                    </div>
+                    <p class="text-slate-300 text-xs">
+                        法人の内部留保を最大化する場合、役員報酬を極限まで低く抑える必要があります。しかしその場合、本業利益がそのまま法人課税所得となり、<strong>実効税率 約25%（所得800万円以下）〜34%（超過分）</strong>の法人税等が課税されます。
+                    </p>
+                    <p class="text-slate-300 text-xs">
+                        ${adviceOfMax}
+                        この額面を基準とし、法人の設備投資・新規開発・広告費にプールすべき金額を差し引いたうえで、法人側に残すべき最終利益を確保してください。
+                    </p>
+                </div>
+            `;
+
+            safeSetHTML(advisoryContent, leftCol + rightCol);
+        }
+
+        function setupTaxModeSwitchers() {
+            const btnExclude = document.getElementById('btn-tax-exclude');
+            const btnInclude = document.getElementById('btn-tax-include');
+
+            if (btnExclude) {
+                btnExclude.addEventListener('click', () => {
+                    if (isTaxIncluded) {
+                        isTaxIncluded = false;
+                        const rev = document.getElementById('input-revenue');
+                        const sub = document.getElementById('input-subcontracting');
+                        const sga = document.getElementById('input-sga');
+                        if (rev) rev.value = Math.round(parseFloat(rev.value) / 1.1);
+                        if (sub) sub.value = Math.round(parseFloat(sub.value) / 1.1);
+                        if (sga) sga.value = Math.round(parseFloat(sga.value) / 1.1);
+                        const numRev = document.getElementById('num-revenue');
+                        const numSub = document.getElementById('num-subcontracting');
+                        const numSgaEl = document.getElementById('num-sga');
+                        if (numRev && rev) numRev.value = rev.value;
+                        if (numSub && sub) numSub.value = sub.value;
+                        if (numSgaEl && sga) numSgaEl.value = sga.value;
+                        updateTaxModeUI();
+                        calculateAll();
+                    }
+                });
+            }
+            if (btnInclude) {
+                btnInclude.addEventListener('click', () => {
+                    if (!isTaxIncluded) {
+                        isTaxIncluded = true;
+                        const rev = document.getElementById('input-revenue');
+                        const sub = document.getElementById('input-subcontracting');
+                        const sga = document.getElementById('input-sga');
+                        if (rev) rev.value = Math.round(parseFloat(rev.value) * 1.1);
+                        if (sub) sub.value = Math.round(parseFloat(sub.value) * 1.1);
+                        if (sga) sga.value = Math.round(parseFloat(sga.value) * 1.1);
+                        const numRev = document.getElementById('num-revenue');
+                        const numSub = document.getElementById('num-subcontracting');
+                        const numSgaEl = document.getElementById('num-sga');
+                        if (numRev && rev) numRev.value = rev.value;
+                        if (numSub && sub) numSub.value = sub.value;
+                        if (numSgaEl && sga) numSgaEl.value = sga.value;
+                        updateTaxModeUI();
+                        calculateAll();
+                    }
+                });
+            }
+        }
+
+        function updateTaxModeUI() {
+            if (isTaxIncluded) {
+                safeSetClass(btnTaxInclude, "px-3 py-1.5 text-xs font-medium rounded-md bg-emerald-600 text-white transition-all flex items-center justify-center gap-1");
+                safeSetClass(btnTaxExclude, "px-3 py-1.5 text-xs font-medium rounded-md text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1");
+                document.querySelectorAll('.tax-label').forEach(el => el.innerText = '（税込）');
+            } else {
+                safeSetClass(btnTaxExclude, "px-3 py-1.5 text-xs font-medium rounded-md bg-emerald-600 text-white transition-all flex items-center justify-center gap-1");
+                safeSetClass(btnTaxInclude, "px-3 py-1.5 text-xs font-medium rounded-md text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1");
+                document.querySelectorAll('.tax-label').forEach(el => el.innerText = '（税抜）');
+            }
+        }
+
+        function setupTabSwitchers() {
+            if (tabSummary && tabAnalysis && contentSummary && contentAnalysis) {
+                tabSummary.addEventListener('click', () => {
+                    tabSummary.className = "px-5 py-2 text-sm font-medium rounded-lg bg-emerald-600 text-white transition-all flex items-center gap-2";
+                    tabAnalysis.className = "px-5 py-2 text-sm font-medium rounded-lg text-slate-400 hover:text-white transition-all flex items-center gap-2";
+                    contentSummary.classList.remove('hidden');
+                    contentAnalysis.classList.add('hidden');
+                    calculateAll();
+                });
+                tabAnalysis.addEventListener('click', () => {
+                    tabAnalysis.className = "px-5 py-2 text-sm font-medium rounded-lg bg-emerald-600 text-white transition-all flex items-center gap-2";
+                    tabSummary.className = "px-5 py-2 text-sm font-medium rounded-lg text-slate-400 hover:text-white transition-all flex items-center gap-2";
+                    contentAnalysis.classList.remove('hidden');
+                    contentSummary.classList.add('hidden');
+                    calculateAll();
+                });
+            }
+        }
+
+        function initApp() {
+            cacheElements();
+            setupSyncedInputs('input-revenue', 'num-revenue');
+            setupSyncedInputs('input-subcontracting', 'num-subcontracting');
+            setupSyncedInputs('input-sga', 'num-sga');
+            setupSyncedInputs('input-salary', 'num-salary');
+            setupTaxModeSwitchers();
+            setupTabSwitchers();
+
+            if (selectAge) selectAge.addEventListener('change', calculateAll);
+            if (selectHealthRate) selectHealthRate.addEventListener('change', calculateAll);
+            if (inputProvident) inputProvident.addEventListener('change', calculateAll);
+            if (selectAccounting) selectAccounting.addEventListener('change', calculateAll);
+            if (selectTaxType) {
+                selectTaxType.addEventListener('change', () => {
+                    if (selectTaxType.value === 'simplified') {
+                        if (industrySelectContainer) industrySelectContainer.classList.remove('hidden');
+                    } else {
+                        if (industrySelectContainer) industrySelectContainer.classList.add('hidden');
+                    }
+                    calculateAll();
+                });
+            }
+            if (selectIndustry) selectIndustry.addEventListener('change', calculateAll);
+
+            updateTaxModeUI();
+            calculateAll();
+        }
+
+        function startAppSequence() {
+            const checkInterval = setInterval(() => {
+                if (window.Chart && window.lucide) {
+                    clearInterval(checkInterval);
+                    initApp();
+                }
+            }, 50);
+            setTimeout(() => {
+                clearInterval(checkInterval);
+                if (!chartDist) initApp();
+            }, 3000);
+        }
+
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            startAppSequence();
+        } else {
+            window.addEventListener('DOMContentLoaded', startAppSequence);
+        }
+    </script>
+</body>
+
+</html>
