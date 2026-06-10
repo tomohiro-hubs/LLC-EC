@@ -48,6 +48,39 @@
 
         <!-- Left Column: Inputs -->
         <section class="lg:col-span-4 flex flex-col gap-6">
+            <!-- Data & AI Control Card -->
+            <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl flex flex-col gap-4">
+                <div class="flex items-center gap-2 pb-3 border-b border-slate-800 justify-between">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="database" class="text-emerald-400 w-5 h-5"></i>
+                        <h2 class="text-base font-bold text-white">データ保存 & AI連携</h2>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="btn-export-json" class="px-3 py-2 text-xs font-medium rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800 transition-all flex items-center justify-center gap-1.5">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>JSON保存</span>
+                    </button>
+                    <button id="btn-import-trigger" class="px-3 py-2 text-xs font-medium rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800 transition-all flex items-center justify-center gap-1.5">
+                        <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                        <span>JSON読込</span>
+                    </button>
+                    <input type="file" id="input-import-json" accept=".json" class="hidden">
+                </div>
+                
+                <div class="flex flex-col gap-2">
+                    <button id="btn-ai-prompt" class="w-full py-2.5 px-4 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        <span>AI分析用プロンプトをコピー</span>
+                    </button>
+                    <button id="btn-clear-cache" class="text-[10px] text-slate-500 hover:text-rose-400 self-center transition-all flex items-center gap-1">
+                        <i data-lucide="trash-2" class="w-3 h-3"></i>
+                        <span>ブラウザのキャッシュをクリア</span>
+                    </button>
+                </div>
+            </div>
+
             <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col gap-6">
                 <div class="flex items-center justify-between pb-4 border-b border-slate-800">
                     <div class="flex items-center gap-2">
@@ -1141,6 +1174,9 @@
             updateAdvisory(rawRevenue, rawSubcontracting, rawSga, currentRes, optimalRes, taxType);
 
             if (window.lucide) lucide.createIcons();
+
+            // 自動保存
+            saveToCache();
         }
 
         function renderDoughnut(revenue, subcontracting, sga, res) {
@@ -1370,6 +1406,291 @@
             }
         }
 
+        // ===== キャッシュ管理とデータ保存 & AIプロンプト機能 =====
+        const CACHE_KEY = 'llc_sim_data_v1';
+
+        // キャッシュするデータの取得
+        function getSimulationData() {
+            return {
+                revenue: parseFloat(document.getElementById('input-revenue')?.value || 1200),
+                subcontracting: parseFloat(document.getElementById('input-subcontracting')?.value || 200),
+                sga: parseFloat(document.getElementById('input-sga')?.value || 150),
+                salary: parseFloat(document.getElementById('input-salary')?.value || 40),
+                ageGroup: document.getElementById('select-age')?.value || 'over40',
+                provident: document.getElementById('input-provident')?.value || '9.3',
+                taxType: document.getElementById('select-tax-type')?.value || 'simplified',
+                industryRate: parseFloat(document.getElementById('select-industry')?.value || 0.5),
+                healthRate: parseFloat(document.getElementById('select-health-rate')?.value || 0.10),
+                accountingMethod: document.getElementById('select-accounting')?.value || 'excluded',
+                isTaxIncluded: isTaxIncluded
+            };
+        }
+
+        // キャッシュへの保存
+        function saveToCache() {
+            try {
+                const data = getSimulationData();
+                localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+            } catch (e) {
+                console.error('Failed to save to localStorage:', e);
+            }
+        }
+
+        // キャッシュからの復元
+        function loadFromCache() {
+            try {
+                const cached = localStorage.getItem(CACHE_KEY);
+                if (!cached) return false;
+                const data = JSON.parse(cached);
+                applySimulationData(data);
+                return true;
+            } catch (e) {
+                console.error('Failed to load from localStorage:', e);
+                return false;
+            }
+        }
+
+        // データのフォームへの適用
+        function applySimulationData(data) {
+            if (!data) return;
+
+            isTaxIncluded = !!data.isTaxIncluded;
+            updateTaxModeUI();
+
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el && val !== undefined) el.value = val;
+            };
+
+            setVal('input-revenue', data.revenue);
+            setVal('num-revenue', data.revenue);
+            setVal('input-subcontracting', data.subcontracting);
+            setVal('num-subcontracting', data.subcontracting);
+            setVal('input-sga', data.sga);
+            setVal('num-sga', data.sga);
+            setVal('input-salary', data.salary);
+            setVal('num-salary', data.salary);
+            
+            if (data.ageGroup) setVal('select-age', data.ageGroup);
+            if (data.provident) setVal('input-provident', data.provident);
+            if (data.taxType) {
+                setVal('select-tax-type', data.taxType);
+                const container = document.getElementById('industry-select-container');
+                if (container) {
+                    if (data.taxType === 'simplified') container.classList.remove('hidden');
+                    else container.classList.add('hidden');
+                }
+            }
+            if (data.industryRate) setVal('select-industry', data.industryRate);
+            if (data.healthRate) setVal('select-health-rate', data.healthRate);
+            if (data.accountingMethod) setVal('select-accounting', data.accountingMethod);
+        }
+
+        // トースト通知の表示
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast-message');
+            const toastText = document.getElementById('toast-text');
+            if (!toast || !toastText) return;
+
+            toastText.innerText = message;
+            if (isError) {
+                toast.firstElementChild.className = "bg-slate-950 border border-rose-500/40 text-rose-400 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 text-sm font-semibold";
+                toast.firstElementChild.firstElementChild.setAttribute('data-lucide', 'alert-circle');
+            } else {
+                toast.firstElementChild.className = "bg-slate-950 border border-emerald-500/40 text-emerald-400 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 text-sm font-semibold";
+                toast.firstElementChild.firstElementChild.setAttribute('data-lucide', 'check-circle');
+            }
+            if (window.lucide) lucide.createIcons();
+
+            toast.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-10', 'opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+
+        // JSONエクスポート
+        function exportToJSON() {
+            try {
+                const data = getSimulationData();
+                const jsonString = JSON.stringify(data, null, 2);
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `llc_sim_settings_${new Date().toISOString().slice(0,10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('設定ファイルをJSON形式で保存しました。');
+            } catch (err) {
+                console.error(err);
+                showToast('設定ファイルの保存に失敗しました。', true);
+            }
+        }
+
+        // JSONインポートのイベントリスナー設定
+        function setupJSONImport() {
+            const trigger = document.getElementById('btn-import-trigger');
+            const input = document.getElementById('input-import-json');
+            if (!trigger || !input) return;
+
+            trigger.addEventListener('click', () => {
+                input.click();
+            });
+
+            input.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        
+                        if (data.revenue === undefined || data.salary === undefined) {
+                            throw new Error('無効なファイル形式です。');
+                        }
+                        
+                        applySimulationData(data);
+                        calculateAll();
+                        showToast('設定ファイルを読み込みました。');
+                    } catch (err) {
+                        console.error(err);
+                        showToast('ファイルの読み込みに失敗しました。形式を確認してください。', true);
+                    }
+                    input.value = '';
+                };
+                reader.readAsText(file);
+            });
+        }
+
+        // キャッシュクリア
+        function clearSimulationCache() {
+            try {
+                localStorage.removeItem(CACHE_KEY);
+                showToast('キャッシュをクリアしました。初期設定に戻します。');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } catch (e) {
+                console.error(e);
+                showToast('キャッシュのクリアに失敗しました。', true);
+            }
+        }
+
+        // AIプロンプトの生成
+        function generateAIPrompt() {
+            const rawRevenue = parseFloat(document.getElementById('input-revenue')?.value || 1200);
+            const rawSubcontracting = parseFloat(document.getElementById('input-subcontracting')?.value || 200);
+            const rawSga = parseFloat(document.getElementById('input-sga')?.value || 150);
+            const monthlySalary = parseFloat(document.getElementById('input-salary')?.value || 40);
+            const ageGroup = document.getElementById('select-age')?.value || 'over40';
+            const provident = document.getElementById('input-provident')?.value || '9.3';
+            const taxType = document.getElementById('select-tax-type')?.value || 'simplified';
+            const industryRate = parseFloat(document.getElementById('select-industry')?.value || 0.5);
+            const healthRate = parseFloat(document.getElementById('select-health-rate')?.value || 0.10);
+            const accountingMethod = document.getElementById('select-accounting')?.value || 'excluded';
+
+            const currentRes = calculateFinancials(rawRevenue, rawSubcontracting, rawSga, monthlySalary, ageGroup, provident, taxType, industryRate, healthRate, accountingMethod);
+            const optimalRes = findOptimalSalary(rawRevenue, rawSubcontracting, rawSga, ageGroup, provident, taxType, industryRate, healthRate, accountingMethod);
+            const zeroRes = calculateFinancials(rawRevenue, rawSubcontracting, rawSga, 0, ageGroup, provident, taxType, industryRate, healthRate, accountingMethod);
+
+            const formatMan = (num) => Math.round(num).toLocaleString() + '万円';
+
+            const ageStr = ageGroup === 'over40' ? '40歳以上65歳未満（介護保険あり）' : '40歳未満（介護保険なし）';
+            const healthStr = healthRate === 0.0944 ? '沖縄 9.44%' : healthRate === 0.0991 ? '東京 9.91%' : healthRate === 0.1000 ? '全国平均 10.00%' : '佐賀 10.78%';
+            const providentStr = provident === '0' ? '未加入' : provident === '2.3' ? 'iDeCoのみ最大(2.3万円/月)' : provident === '7.0' ? '小規模共済のみ最大(7万円/月)' : '両方併用最大(9.3万円/月)';
+            const taxTypeStr = taxType === 'exempt' ? '免税事業者' : taxType === 'principle' ? '一般課税（原則課税）' : taxType === 'simplified' ? '簡易課税' : '2割特例';
+            const industryStr = taxType === 'simplified' ? `（第${industryRate === 0.9 ? '1' : industryRate === 0.8 ? '2' : industryRate === 0.7 ? '3' : industryRate === 0.6 ? '4' : industryRate === 0.5 ? '5' : '6'}種：みなし仕入率${industryRate * 100}%）` : '';
+            const accountingStr = accountingMethod === 'excluded' ? '税抜経理' : '税込経理';
+
+            return `以下の条件で合同会社の決算および役員報酬のシミュレーションを行いました。この財務データを分析し、法人の財務健全性の向上、節税対策、個人＋法人の合計手残りキャッシュの最大化に向けた具体的なアドバイスをプロの税理士・財務コンサルタントの視点で詳細に提供してください。
+
+---
+
+### 1. シミュレーション設定条件
+- **年間売上高**: ${rawRevenue}万円 (${isTaxIncluded ? '税込' : '税抜'})
+- **外注費・仕入等**: ${rawSubcontracting}万円 (${isTaxIncluded ? '税込' : '税抜'})
+- **一般販管費 (経費)**: ${rawSga}万円 (${isTaxIncluded ? '税込' : '税抜'})
+- **設定役員報酬**: 月額${monthlySalary}万円 (年間総額: ${monthlySalary * 12}万円)
+- **年齢区分**: ${ageStr}
+- **健康保険料率**: ${healthStr}
+- **小規模企業共済 / iDeCo**: ${providentStr}
+- **消費税の課税区分**: ${taxTypeStr}${industryStr}
+- **消費税の経理方式**: ${accountingStr}
+
+---
+
+### 2. 計算結果 (現在の設定：パターンB)
+#### 【法人側財務】
+- **売上総利益（粗利）**: ${formatMan(currentRes.grossProfit)} (粗利率: ${currentRes.revenueEx > 0 ? Math.round((currentRes.grossProfit / currentRes.revenueEx) * 100) + '%' : '0%'})
+- **役員報酬前営業利益**: ${formatMan(currentRes.preSalaryOperatingProfit)}
+- **課税対象法人所得**: ${formatMan(currentRes.corpIncomeBeforeTax)}
+- **社会保険料 (会社負担分)**: ${formatMan(currentRes.cShaho)}
+- **法人税等（実効税率・均等割含む）**: ${formatMan(currentRes.corpTaxes)}
+- **【法人】最終内部留保（手残り）**: ${formatMan(currentRes.corpReserve)}
+
+#### 【個人側財務】
+- **役員報酬年間総支給（額面）**: ${formatMan(currentRes.salaryAnnual)}
+- **社会保険料 (個人負担分)**: ${formatMan(currentRes.pShaho)}
+- **所得税 (復興税含む)**: ${formatMan(currentRes.pTax)}
+- **住民税**: ${formatMan(currentRes.pInhabitant)}
+- **【個人】実質手取り（可処分所得）**: ${formatMan(currentRes.personalNet)} (月額換算: 約${formatMan(currentRes.personalNet / 12)})
+
+#### 【納税・社保支払合計】
+- **国・自治体・社保への総支払額**: ${formatMan(currentRes.totalTaxAndShahoLoss)}
+  - 内訳: 社保合計 ${formatMan(currentRes.pShaho + currentRes.cShaho)} / 税金合計 ${formatMan(currentRes.pTax + currentRes.pInhabitant + currentRes.corpTaxes + Math.max(0, currentRes.consumptionTaxToPay))}
+  - 消費税申告納税額: ${formatMan(currentRes.consumptionTaxToPay)}
+
+#### 【総合手残り】
+- **個人＋法人 合計キャッシュ**: ${formatMan(currentRes.totalCombinedCash)}
+
+---
+
+### 3. 法人の運営状況・ビジネスモデル
+- **人員構成**: 役員のみの合同会社（従業員なし）。報酬支給対象は代表社員1名のみ。
+- **目的**: 代表社員の役員報酬額の妥当性と、個人＋法人の合計手残りキャッシュの最大化に向けた整合性の確認。
+- **オフィス環境**: 自社オフィスは持たず、バーチャルオフィスを利用（オフィス家賃等の固定費はほぼゼロ）。
+- **主な経費**: 出張旅費（交通費・宿泊費等）が経費の大部分を占める。
+- **設備投資**: ほとんどなし（数年に1回、業務用のパソコンやスマートフォンを買い替える程度）。
+
+---
+
+### 4. 役員報酬シナリオ比較 (年間キャッシュ)
+- **パターンA (役員報酬ゼロ)**:
+  - 個人手取り: 0万円
+  - 法人内部留保: ${formatMan(zeroRes.corpReserve)}
+  - 個人＋法人 合計キャッシュ: ${formatMan(zeroRes.totalCombinedCash)}
+- **パターンB (設定中: 月額${monthlySalary}万円)**:
+  - 個人手取り: ${formatMan(currentRes.personalNet)}
+  - 法人内部留保: ${formatMan(currentRes.corpReserve)}
+  - 個人＋法人 合計キャッシュ: ${formatMan(currentRes.totalCombinedCash)}
+- **パターンC (税理・社保最適報酬: 月額${optimalRes.monthly}万円)**:
+  - 個人手取り: ${formatMan(optimalRes.result.personalNet)}
+  - 法人内部留保: ${formatMan(optimalRes.result.corpReserve)}
+  - 個人＋法人 合計キャッシュ: ${formatMan(optimalRes.result.totalCombinedCash)}
+  ${optimalRes.monthly !== monthlySalary && Math.round(optimalRes.result.totalCombinedCash - currentRes.totalCombinedCash) > 0 ? "※最適報酬にすることで、現在より年間約 " + Math.round(optimalRes.result.totalCombinedCash - currentRes.totalCombinedCash) + "万円 合計手残りキャッシュが増加します。" : ''}
+
+---
+
+### 質問・分析依頼
+上記のシミュレーション結果をもとに、以下の点について分析と具体的な対策を提示してください：
+
+1. **役員報酬最適化分析**:
+   現在の設定（パターンB）と最適報酬（パターンC）を比較し、合計キャッシュが増減する主たる原因（税率と社会保険料の境界線の影響など）を明らかにしてください。
+2. **法人の内部留保と個人手取りの適正バランス**:
+   売上規模や事業の特性を考慮したとき、現在の「法人留保」と「個人手取り」の比率は財務戦略上どのように評価できますか？将来の投資資金や運転資金確保の観点も含めて教えてください。
+3. **消費税・経費の最適化プラン**:
+   現在の消費税課税区分・経理方式におけるアドバイスと、販管費（経費）の使い方の最適化（どのような経費を増やすべきか、または法人化のメリットを活かした経費化など）について提案してください。
+4. **追加の財務・節税スキームの推奨**:
+   バーチャルオフィス利用、出張旅費がメイン、設備投資がほぼないという今回の事業形態（一人合同会社）を踏まえ、特に効果の高い具体的な節税・資産形成スキーム（旅費規程の活用による非課税日当の支給、自宅兼オフィスの家賃の経費化、小規模企業共済や経営セーフティ共済の活用など）について、実務的な優先順位を含めて教えてください。`;
+        }
+
         function initApp() {
             cacheElements();
             setupSyncedInputs('input-revenue', 'num-revenue');
@@ -1378,6 +1699,41 @@
             setupSyncedInputs('input-salary', 'num-salary');
             setupTaxModeSwitchers();
             setupTabSwitchers();
+
+            // JSONインポート/エクスポートおよびAIプロンプトのイベント設定
+            setupJSONImport();
+            
+            const btnExport = document.getElementById('btn-export-json');
+            if (btnExport) btnExport.addEventListener('click', exportToJSON);
+
+            const btnAI = document.getElementById('btn-ai-prompt');
+            if (btnAI) {
+                btnAI.addEventListener('click', () => {
+                    const promptText = generateAIPrompt();
+                    navigator.clipboard.writeText(promptText).then(() => {
+                        showToast('AI分析用プロンプトをクリップボードにコピーしました！');
+                    }).catch(err => {
+                        console.error('Failed to copy: ', err);
+                        // クリップボードAPIフォールバック
+                        const textArea = document.createElement("textarea");
+                        textArea.value = promptText;
+                        textArea.style.position = "fixed";
+                        document.body.appendChild(textArea);
+                        textArea.focus();
+                        textArea.select();
+                        try {
+                            document.execCommand('copy');
+                            showToast('AI分析用プロンプトをコピーしました！');
+                        } catch (err2) {
+                            showToast('コピーに失敗しました。', true);
+                        }
+                        document.body.removeChild(textArea);
+                    });
+                });
+            }
+
+            const btnClear = document.getElementById('btn-clear-cache');
+            if (btnClear) btnClear.addEventListener('click', clearSimulationCache);
 
             if (selectAge) selectAge.addEventListener('change', calculateAll);
             if (selectHealthRate) selectHealthRate.addEventListener('change', calculateAll);
@@ -1394,6 +1750,9 @@
                 });
             }
             if (selectIndustry) selectIndustry.addEventListener('change', calculateAll);
+
+            // キャッシュからロード
+            loadFromCache();
 
             updateTaxModeUI();
             calculateAll();
@@ -1418,6 +1777,14 @@
             window.addEventListener('DOMContentLoaded', startAppSequence);
         }
     </script>
+
+    <!-- Toast Notification -->
+    <div id="toast-message" class="fixed bottom-5 right-5 z-50 transform translate-y-10 opacity-0 pointer-events-none transition-all duration-300 ease-out">
+        <div class="bg-slate-950 border border-emerald-500/40 text-emerald-400 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 text-sm font-semibold">
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+            <span id="toast-text">プロンプトをコピーしました！</span>
+        </div>
+    </div>
 </body>
 
 </html>
