@@ -17,6 +17,86 @@
         body {
             font-family: 'Inter', 'Noto Sans JP', sans-serif;
         }
+
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                font-size: 10.5pt !important;
+                display: block !important; /* flex レイアウトを解除 */
+                min-height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            /* 画面用UIを全て非表示にする */
+            header,
+            main,
+            #toast-message {
+                display: none !important;
+            }
+            /* 印刷用レポートを表示する */
+            #print-report {
+                display: block !important;
+                background: white !important;
+                color: black !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            /* 改ページの制御 */
+            .print-page {
+                page-break-after: always;
+                break-after: page;
+                box-sizing: border-box;
+                width: 100%;
+                /* min-height を指定せず、ブラウザによる余計な改ページを防ぐ */
+                padding: 12mm 15mm !important;
+                background: white !important;
+                color: black !important;
+            }
+            .print-page:last-child {
+                page-break-after: avoid;
+                break-after: avoid;
+            }
+            /* テーブルの印刷スタイル */
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 8px;
+                margin-bottom: 12px;
+            }
+            th, td {
+                border: 1px solid #cbd5e1 !important;
+                padding: 5px 6px !important;
+                text-align: left;
+                font-size: 9.5pt;
+                color: black !important;
+            }
+            th {
+                background-color: #f1f5f9 !important;
+                font-weight: bold;
+            }
+            /* テキストカラーの強制リセット */
+            .text-emerald-400, .text-emerald-300, .text-blue-400, .text-rose-400, .text-amber-400, .text-white, .text-slate-400, .text-slate-300 {
+                color: black !important;
+            }
+            /* 特徴的な部分の太字強調 */
+            .print-bold {
+                font-weight: bold !important;
+            }
+            .print-highlight-green {
+                background-color: #f0fdf4 !important;
+                font-weight: bold;
+            }
+            .print-highlight-blue {
+                background-color: #eff6ff !important;
+                font-weight: bold;
+            }
+        }
+        /* 通常表示時は印刷用レポートを非表示にする */
+        #print-report {
+            display: none;
+        }
     </style>
 </head>
 
@@ -73,6 +153,10 @@
                     <button id="btn-ai-prompt" class="w-full py-2.5 px-4 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition-all flex items-center justify-center gap-2">
                         <i data-lucide="sparkles" class="w-4 h-4"></i>
                         <span>AI分析用プロンプトをコピー</span>
+                    </button>
+                    <button id="btn-print" class="w-full py-2.5 px-4 text-xs font-semibold rounded-lg bg-slate-900 border border-slate-800 hover:text-white hover:bg-slate-800 text-slate-300 shadow-lg transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="printer" class="w-4 h-4 text-emerald-400"></i>
+                        <span>PDF / A4印刷用に出力</span>
                     </button>
                     <button id="btn-clear-cache" class="text-[10px] text-slate-500 hover:text-rose-400 self-center transition-all flex items-center gap-1">
                         <i data-lucide="trash-2" class="w-3 h-3"></i>
@@ -511,7 +595,7 @@
                     <div
                         class="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col justify-between">
                         <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
-                            <span class="text-sm font-bold text-white">財務・損益（P/L）精細内訳</span>
+                            <span class="text-sm font-bold text-white">財務・損益（P/L）精細内訳<br>（パターンB設定時）</span>
                             <span class="text-xs text-slate-500">（万円）</span>
                         </div>
                         <div class="space-y-2 text-xs">
@@ -827,6 +911,62 @@
 
             bGrandTotal = document.getElementById('breakdown-grand-total');
             advisoryContent = document.getElementById('advisory-content');
+
+            // 印刷用要素
+            printReport = document.getElementById('print-report');
+            printDatetime = document.getElementById('print-datetime');
+            printCondRevenue = document.getElementById('print-cond-revenue');
+            printCondSubcontracting = document.getElementById('print-cond-subcontracting');
+            printCondSga = document.getElementById('print-cond-sga');
+            printCondSalary = document.getElementById('print-cond-salary');
+            printCondAge = document.getElementById('print-cond-age');
+            printCondHealth = document.getElementById('print-cond-health');
+            printCondProvident = document.getElementById('print-cond-provident');
+            printCondTaxtype = document.getElementById('print-cond-taxtype');
+            printCondAccounting = document.getElementById('print-cond-accounting');
+
+            printScACorp = document.getElementById('print-sc-a-corp');
+            printScAShaho = document.getElementById('print-sc-a-shaho');
+            printScATax = document.getElementById('print-sc-a-tax');
+            printScATotal = document.getElementById('print-sc-a-total');
+
+            printScBSalary = document.getElementById('print-sc-b-salary');
+            printScBPersonal = document.getElementById('print-sc-b-personal');
+            printScBCorp = document.getElementById('print-sc-b-corp');
+            printScBShaho = document.getElementById('print-sc-b-shaho');
+            printScBTax = document.getElementById('print-sc-b-tax');
+            printScBTotal = document.getElementById('print-sc-b-total');
+
+            printScCSalary = document.getElementById('print-sc-c-salary');
+            printScCPersonal = document.getElementById('print-sc-c-personal');
+            printScCCorp = document.getElementById('print-sc-c-corp');
+            printScCShaho = document.getElementById('print-sc-c-shaho');
+            printScCTax = document.getElementById('print-sc-c-tax');
+            printScCTotal = document.getElementById('print-sc-c-total');
+
+            printOptAlert = document.getElementById('print-opt-alert');
+            printOptBenefit = document.getElementById('print-opt-benefit');
+
+            printPlRevenue = document.getElementById('print-pl-revenue');
+            printPlRevenueEx = document.getElementById('print-pl-revenue-ex');
+            printPlSubcontract = document.getElementById('print-pl-subcontract');
+            printPlSubcontractEx = document.getElementById('print-pl-subcontract-ex');
+            printPlGrossprofit = document.getElementById('print-pl-grossprofit');
+            printPlSga = document.getElementById('print-pl-sga');
+            printPlSgaEx = document.getElementById('print-pl-sga-ex');
+            printPlPresalaryprofit = document.getElementById('print-pl-presalaryprofit');
+            printPlSalaryAnnual = document.getElementById('print-pl-salary-annual');
+            printPlPShaho = document.getElementById('print-pl-p-shaho');
+            printPlPTax = document.getElementById('print-pl-p-tax');
+            printPlPInhabitant = document.getElementById('print-pl-p-inhabitant');
+            printPlPNet = document.getElementById('print-pl-p-net');
+            printPlCtPay = document.getElementById('print-pl-ct-pay');
+            printPlCtImpact = document.getElementById('print-pl-ct-impact');
+            printPlCIncome = document.getElementById('print-pl-c-income');
+            printPlCShaho = document.getElementById('print-pl-c-shaho');
+            printPlCTax = document.getElementById('print-pl-c-tax');
+            printPlCReserve = document.getElementById('print-pl-c-reserve');
+            printPlGrandtotal = document.getElementById('print-pl-grandtotal');
         }
 
         function safeSetText(el, val) { if (el) el.innerText = val; }
@@ -1174,6 +1314,84 @@
             updateAdvisory(rawRevenue, rawSubcontracting, rawSga, currentRes, optimalRes, taxType);
 
             if (window.lucide) lucide.createIcons();
+
+            // 印刷用HTML要素の同期更新
+            if (printCondRevenue) {
+                const ageStr = ageGroup === 'over40' ? '40歳以上65歳未満（介護保険あり）' : '40歳未満（介護保険なし）';
+                const healthStr = healthRate === 0.0944 ? '沖縄 9.44%' : healthRate === 0.0991 ? '東京 9.91%' : healthRate === 0.1000 ? '全国平均 10.00%' : '佐賀 10.78%';
+                const providentStr = provident === '0' ? '未加入' : provident === '2.3' ? 'iDeCoのみ最大(2.3万円/月)' : provident === '7.0' ? '小規模共済のみ最大(7万円/月)' : '両方併用最大(9.3万円/月)';
+                const taxTypeStr = taxType === 'exempt' ? '免税事業者' : taxType === 'principle' ? '一般課税（原則課税）' : taxType === 'simplified' ? '簡易課税' : '2割特例';
+                const industryStr = taxType === 'simplified' ? `（第${industryRate === 0.9 ? '1' : industryRate === 0.8 ? '2' : industryRate === 0.7 ? '3' : industryRate === 0.6 ? '4' : industryRate === 0.5 ? '5' : '6'}種：みなし仕入率${industryRate * 100}%）` : '';
+                const accountingStr = accountingMethod === 'excluded' ? '税抜経理' : '税込経理';
+
+                safeSetText(printCondRevenue, rawRevenue + taxModeSuffix);
+                safeSetText(printCondSubcontracting, rawSubcontracting + taxModeSuffix);
+                safeSetText(printCondSga, rawSga + taxModeSuffix);
+                safeSetText(printCondSalary, monthlySalary + '万円（年間 ' + (monthlySalary * 12) + '万円）');
+                safeSetText(printCondAge, ageStr);
+                safeSetText(printCondHealth, healthStr);
+                safeSetText(printCondProvident, providentStr);
+                safeSetText(printCondTaxtype, taxTypeStr + industryStr);
+                safeSetText(printCondAccounting, accountingStr);
+
+                const getShahoTotal = (res) => Math.round(res.pShaho + res.cShaho);
+                const getTaxTotal = (res) => Math.round(res.pTax + res.pInhabitant + res.corpTaxes + Math.max(0, res.consumptionTaxToPay));
+
+                // パターンA
+                safeSetText(printScACorp, Math.round(zeroRes.corpReserve) + ' 万円');
+                safeSetText(printScAShaho, getShahoTotal(zeroRes) + ' 万円');
+                safeSetText(printScATax, getTaxTotal(zeroRes) + ' 万円');
+                safeSetText(printScATotal, Math.round(zeroRes.totalCombinedCash) + ' 万円');
+
+                // パターンB
+                safeSetText(printScBSalary, (monthlySalary * 12) + ' 万円');
+                safeSetText(printScBPersonal, Math.round(currentRes.personalNet) + ' 万円');
+                safeSetText(printScBCorp, Math.round(currentRes.corpReserve) + ' 万円');
+                safeSetText(printScBShaho, getShahoTotal(currentRes) + ' 万円');
+                safeSetText(printScBTax, getTaxTotal(currentRes) + ' 万円');
+                safeSetText(printScBTotal, Math.round(currentRes.totalCombinedCash) + ' 万円');
+
+                // パターンC
+                safeSetText(printScCSalary, (optimalRes.monthly * 12) + ' 万円');
+                safeSetText(printScCPersonal, Math.round(optimalRes.result.personalNet) + ' 万円');
+                safeSetText(printScCCorp, Math.round(optimalRes.result.corpReserve) + ' 万円');
+                safeSetText(printScCShaho, getShahoTotal(optimalRes.result) + ' 万円');
+                safeSetText(printScCTax, getTaxTotal(optimalRes.result) + ' 万円');
+                safeSetText(printScCTotal, Math.round(optimalRes.result.totalCombinedCash) + ' 万円');
+
+                // 最適化アラート
+                if (benefit > 5 && monthlySalary !== optimalRes.monthly) {
+                    safeSetText(printOptBenefit, benefit);
+                    if (printOptAlert) printOptAlert.classList.remove('hidden');
+                } else {
+                    if (printOptAlert) printOptAlert.classList.add('hidden');
+                }
+
+                // P/L 精細内訳
+                safeSetText(printPlRevenue, rawRevenue.toLocaleString() + (isTaxIncluded ? ' (税込)' : ' (税抜)'));
+                safeSetText(printPlRevenueEx, Math.round(currentRes.revenueEx).toLocaleString());
+                safeSetText(printPlSubcontract, rawSubcontracting.toLocaleString() + (isTaxIncluded ? ' (税込)' : ' (税抜)'));
+                safeSetText(printPlSubcontractEx, Math.round(currentRes.subcontractingEx).toLocaleString());
+                safeSetText(printPlGrossprofit, Math.round(currentRes.grossProfit).toLocaleString());
+                safeSetText(printPlSga, rawSga.toLocaleString() + (isTaxIncluded ? ' (税込)' : ' (税抜)'));
+                safeSetText(printPlSgaEx, Math.round(currentRes.sgaEx).toLocaleString());
+                safeSetText(printPlPresalaryprofit, Math.round(currentRes.preSalaryOperatingProfit).toLocaleString());
+                safeSetText(printPlSalaryAnnual, Math.round(monthlySalary * 12).toLocaleString());
+                safeSetText(printPlPShaho, Math.round(currentRes.pShaho).toLocaleString());
+                safeSetText(printPlPTax, Math.round(currentRes.pTax).toLocaleString());
+                safeSetText(printPlPInhabitant, Math.round(currentRes.pInhabitant).toLocaleString());
+                safeSetText(printPlPNet, Math.round(currentRes.personalNet).toLocaleString());
+                safeSetText(printPlCtPay, Math.round(currentRes.consumptionTaxToPay).toLocaleString());
+                
+                const printImpactSign = currentRes.consumptionTaxImpact >= 0 ? '+' : '';
+                safeSetText(printPlCtImpact, printImpactSign + Math.round(currentRes.consumptionTaxImpact).toLocaleString());
+                
+                safeSetText(printPlCIncome, Math.round(currentRes.corpIncomeBeforeTax).toLocaleString());
+                safeSetText(printPlCShaho, Math.round(currentRes.cShaho).toLocaleString());
+                safeSetText(printPlCTax, Math.round(currentRes.corpTaxes).toLocaleString());
+                safeSetText(printPlCReserve, Math.round(currentRes.corpReserve).toLocaleString());
+                safeSetText(printPlGrandtotal, Math.round(currentRes.totalCombinedCash).toLocaleString());
+            }
 
             // 自動保存
             saveToCache();
@@ -1710,6 +1928,24 @@
             const btnExport = document.getElementById('btn-export-json');
             if (btnExport) btnExport.addEventListener('click', exportToJSON);
 
+            const btnPrint = document.getElementById('btn-print');
+            if (btnPrint) {
+                btnPrint.addEventListener('click', () => {
+                    if (printDatetime) {
+                        const now = new Date();
+                        printDatetime.innerText = now.toLocaleString('ja-JP', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                        });
+                    }
+                    window.print();
+                });
+            }
+
             const btnAI = document.getElementById('btn-ai-prompt');
             if (btnAI) {
                 btnAI.addEventListener('click', () => {
@@ -1781,6 +2017,248 @@
             window.addEventListener('DOMContentLoaded', startAppSequence);
         }
     </script>
+
+    <!-- Print Report Template (A4 2 Pages) -->
+    <div id="print-report">
+        <!-- PAGE 1 -->
+        <div class="print-page">
+            <div style="text-align: center; padding-bottom: 24px; border-bottom: 2px solid #cbd5e1;">
+                <h1 style="font-size: 24px; font-weight: bold; color: #0f172a; margin: 0;">合同会社 決算＆役員報酬シミュレーション 検討結果報告書</h1>
+                <p style="font-size: 12px; color: #64748b; margin-top: 8px;">出力日時: <span id="print-datetime"></span> | LLC役員報酬・決算最適化シミュレーター</p>
+            </div>
+
+            <div style="margin-top: 24px;">
+                <h2 style="font-size: 16px; font-weight: bold; color: #1e293b; border-left: 4px solid #059669; padding-left: 8px; margin-bottom: 12px;">1. シミュレーション前提条件</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 50%;">設定項目</th>
+                            <th style="width: 50%;">設定値</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="font-weight: 500;">年間売上高</td>
+                            <td id="print-cond-revenue" class="print-bold"></td>
+                        </tr>
+                        <tr>
+                            <td>外注費・仕入等</td>
+                            <td id="print-cond-subcontracting"></td>
+                        </tr>
+                        <tr>
+                            <td>一般販管費（その他経費）</td>
+                            <td id="print-cond-sga"></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: 500; color: #047857;">設定役員報酬（月額）</td>
+                            <td id="print-cond-salary" class="print-bold" style="color: #047857;"></td>
+                        </tr>
+                        <tr>
+                            <td>年齢区分（社会保険料率）</td>
+                            <td id="print-cond-age"></td>
+                        </tr>
+                        <tr>
+                            <td>健康保険料率（協会けんぽ）</td>
+                            <td id="print-cond-health"></td>
+                        </tr>
+                        <tr>
+                            <td>小規模企業共済 / iDeCo（月額）</td>
+                            <td id="print-cond-provident"></td>
+                        </tr>
+                        <tr>
+                            <td>消費税の課税区分</td>
+                            <td id="print-cond-taxtype"></td>
+                        </tr>
+                        <tr>
+                            <td>消費税の経理方式</td>
+                            <td id="print-cond-accounting"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 32px;">
+                <h2 style="font-size: 16px; font-weight: bold; color: #1e293b; border-left: 4px solid #059669; padding-left: 8px; margin-bottom: 12px;">2. 役員報酬シナリオ 3パターン比較</h2>
+                <p style="font-size: 11px; color: #64748b; margin-bottom: 8px;">※金額単位：万円/年。個人手取りおよび法人内部留保は、社会保険料・税金を差し引いた実質的な獲得キャッシュです。</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>シナリオ</th>
+                            <th>年間総支給</th>
+                            <th>個人手取り</th>
+                            <th>法人内部留保</th>
+                            <th>社会保険料</th>
+                            <th>税金合計</th>
+                            <th class="print-highlight-green">個人＋法人 合計</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="print-bold">パターンA<br><span style="font-size: 9px; color: #64748b; font-weight: normal;">役員報酬ゼロ</span></td>
+                            <td>0 万円</td>
+                            <td>0 万円</td>
+                            <td id="print-sc-a-corp"></td>
+                            <td id="print-sc-a-shaho" style="color: #b91c1c;"></td>
+                            <td id="print-sc-a-tax" style="color: #b91c1c;"></td>
+                            <td id="print-sc-a-total" class="print-bold"></td>
+                        </tr>
+                        <tr class="print-highlight-green">
+                            <td class="print-bold" style="color: #047857;">パターンB<br><span style="font-size: 9px; color: #047857; font-weight: normal;">設定中の報酬</span></td>
+                            <td id="print-sc-b-salary" class="print-bold"></td>
+                            <td id="print-sc-b-personal" class="print-bold" style="color: #047857;"></td>
+                            <td id="print-sc-b-corp" class="print-bold" style="color: #1d4ed8;"></td>
+                            <td id="print-sc-b-shaho" style="color: #b91c1c;"></td>
+                            <td id="print-sc-b-tax" style="color: #b91c1c;"></td>
+                            <td id="print-sc-b-total" class="print-bold" style="color: #047857;"></td>
+                        </tr>
+                        <tr class="print-highlight-blue">
+                            <td class="print-bold" style="color: #1d4ed8;">パターンC<br><span style="font-size: 9px; color: #1d4ed8; font-weight: normal;">税理・社保最適</span></td>
+                            <td id="print-sc-c-salary" class="print-bold"></td>
+                            <td id="print-sc-c-personal" class="print-bold" style="color: #047857;"></td>
+                            <td id="print-sc-c-corp" class="print-bold" style="color: #1d4ed8;"></td>
+                            <td id="print-sc-c-shaho" style="color: #b91c1c;"></td>
+                            <td id="print-sc-c-tax" style="color: #b91c1c;"></td>
+                            <td id="print-sc-c-total" class="print-bold" style="color: #1d4ed8;"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div id="print-opt-alert" style="margin-top: 12px; padding: 10px; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; font-size: 11px; color: #1e40af; display: none;">
+                    💡 <strong>最適報酬（パターンC）への変更効果:</strong> パターンBと比較して、個人＋法人の手残り合計キャッシュが年間約 <span id="print-opt-benefit" class="font-bold"></span> 万円改善する可能性があります。
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 2 -->
+        <div class="print-page">
+            <h2 style="font-size: 16px; font-weight: bold; color: #1e293b; border-left: 4px solid #059669; padding-left: 8px; margin-bottom: 12px;">3. 財務・損益（P/L）精細内訳（パターンB設定時）</h2>
+            <p style="font-size: 11px; color: #64748b; margin-bottom: 8px;">※金額単位：万円/年（端数は四捨五入）</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 70%;">勘定科目 / 内訳項目</th>
+                        <th style="width: 30%; text-align: right;">金額（万円）</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="print-bold">年間売上高</td>
+                        <td id="print-pl-revenue" style="text-align: right;" class="print-bold"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left: 20px; color: #475569;">└ うち実質税抜売上高</td>
+                        <td id="print-pl-revenue-ex" style="text-align: right; color: #475569;"></td>
+                    </tr>
+                    <tr>
+                        <td class="print-bold" style="color: #991b1b;">外注費・仕入等</td>
+                        <td id="print-pl-subcontract" style="text-align: right; color: #991b1b;"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left: 20px; color: #475569;">└ うち実質税抜外注費</td>
+                        <td id="print-pl-subcontract-ex" style="text-align: right; color: #475569;"></td>
+                    </tr>
+                    <tr style="background-color: #f8fafc;">
+                        <td class="print-bold">売上総利益（実質税抜粗利）</td>
+                        <td id="print-pl-grossprofit" style="text-align: right;" class="print-bold"></td>
+                    </tr>
+                    <tr>
+                        <td class="print-bold" style="color: #991b1b;">一般販管費（経費）</td>
+                        <td id="print-pl-sga" style="text-align: right; color: #991b1b;"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left: 20px; color: #475569;">└ うち実質税抜経費</td>
+                        <td id="print-pl-sga-ex" style="text-align: right; color: #475569;"></td>
+                    </tr>
+                    <tr class="print-highlight-blue">
+                        <td class="print-bold" style="color: #1e3a8a;">役員報酬前営業利益</td>
+                        <td id="print-pl-presalaryprofit" style="text-align: right;" class="print-bold"></td>
+                    </tr>
+                    <tr class="print-highlight-green">
+                        <td class="print-bold" style="color: #047857;">役員報酬年間総支給（額面） (A)</td>
+                        <td id="print-pl-salary-annual" style="text-align: right;" class="print-bold"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left: 20px; color: #475569;">├ 個人負担社会保険料</td>
+                        <td id="print-pl-p-shaho" style="text-align: right; color: #b91c1c;"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left: 20px; color: #475569;">├ 所得税</td>
+                        <td id="print-pl-p-tax" style="text-align: right; color: #b91c1c;"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left: 20px; color: #475569;">└ 住民税</td>
+                        <td id="print-pl-p-inhabitant" style="text-align: right; color: #b91c1c;"></td>
+                    </tr>
+                    <tr style="background-color: #dcfce7;">
+                        <td class="print-bold" style="color: #166534; padding-left: 12px;">【個人】実質手取り (①)</td>
+                        <td id="print-pl-p-net" style="text-align: right; color: #166534;" class="print-bold"></td>
+                    </tr>
+                    <tr style="background-color: #f8fafc;">
+                        <td style="font-weight: 500;">消費税の申告納税額</td>
+                        <td id="print-pl-ct-pay" style="text-align: right;"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left: 20px; color: #475569;">└ 消費税の損益影響（益税/損税）</td>
+                        <td id="print-pl-ct-impact" style="text-align: right;"></td>
+                    </tr>
+                    <tr>
+                        <td class="print-bold">課税対象法人所得</td>
+                        <td id="print-pl-c-income" style="text-align: right;" class="print-bold"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left: 20px; color: #475569;">├ 会社負担社会保険料</td>
+                        <td id="print-pl-c-shaho" style="text-align: right; color: #b91c1c;"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left: 20px; color: #475569;">└ 法人税等（均等割含む）</td>
+                        <td id="print-pl-c-tax" style="text-align: right; color: #b91c1c;"></td>
+                    </tr>
+                    <tr style="background-color: #dbeafe;">
+                        <td class="print-bold" style="color: #1e40af; padding-left: 12px;">【法人】最終内部留保 (②)</td>
+                        <td id="print-pl-c-reserve" style="text-align: right; color: #1e40af;" class="print-bold"></td>
+                    </tr>
+                    <tr style="background-color: #f1f5f9; font-weight: bold;">
+                        <td style="padding-left: 12px;" class="print-bold">個人＋法人 合計キャッシュ (①+②)</td>
+                        <td id="print-pl-grandtotal" style="text-align: right;" class="print-bold"></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top: 20px;">
+                <h2 style="font-size: 14px; font-weight: bold; color: #1e293b; border-left: 4px solid #059669; padding-left: 8px; margin-bottom: 8px;">4. 財務・税務からの戦略的アドバイス</h2>
+                <div style="display: flex; gap: 16px;">
+                    <div style="flex: 1; padding: 10px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; font-size: 10px; line-height: 1.5;">
+                        <h3 style="font-weight: bold; color: #166534; margin: 0 0 4px 0;">【個人視点】役員報酬と手取り最大化</h3>
+                        役員報酬を設定することは、給与所得控除を活用した経費化のメリットを得る一方、社会保険料（労使合計で約30%）と累進的な所得税率の上昇というコストを伴います。ご自身の実際の生活維持コスト（生存年収）を見極め、手取り効率が著しく低下する水準を超えないよう調整することが重要です。
+                    </div>
+                    <div style="flex: 1; padding: 10px; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; font-size: 10px; line-height: 1.5;">
+                        <h3 style="font-weight: bold; color: #1e40af; margin: 0 0 4px 0;">【法人視点】内部留保と税額バランス</h3>
+                        会社の財務健全性を高め、将来の投資や不測の事態に備えるには、役員報酬を低く抑えて法人留保を増やす必要があります。しかし、法人留保を増やすと法人税等（実効税率25%〜34%）の対象となります。特に所得800万円以下の税率メリット（約25%）を意識し、最適な内部留保額をデザインしてください。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 3 -->
+        <div class="print-page">
+            <div style="margin-top: 0px;">
+                <h2 style="font-size: 14px; font-weight: bold; color: #1e293b; border-left: 4px solid #059669; padding-left: 8px; margin-bottom: 6px;">5. 一人合同会社向けの推奨節税・資産形成スキーム</h2>
+                <div style="font-size: 10px; line-height: 1.5; color: #334155;">
+                    <div style="margin-bottom: 6px;">
+                        <strong>① 出張旅費規程の作成と非課税日当の支給 (優先度：高)</strong><br>
+                        出張旅費規程を整備し、出張時に「日当」を支給します。会社側は全額経費（非課税）となり、個人側は所得税・社会保険料が一切かからない非課税所得となるため、極めて効果的なキャッシュ化手段です。
+                    </div>
+                    <div style="margin-bottom: 6px;">
+                        <strong>② 自宅の法人契約による社宅化 (優先度：高)</strong><br>
+                        自宅を会社名義で契約し、役員社宅とすることで、家賃の大部分（最大8〜9割程度）を法人の経費とすることが可能です。個人の手取り給与から支払っていた家賃を経費化できる強力なスキームです。
+                    </div>
+                    <div>
+                        <strong>③ 小規模企業共済 ＆ 経営セーフティ共済の活用 (優先度：中)</strong><br>
+                        小規模企業共済は月最大7万円が全額個人所得控除になります。経営セーフティ共済は年最大240万円まで法人経費としてプールでき、40ヶ月以上加入で元本が100%返還され、法人の利益コントロールに有効です。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Toast Notification -->
     <div id="toast-message" class="fixed bottom-5 right-5 z-50 transform translate-y-10 opacity-0 pointer-events-none transition-all duration-300 ease-out">
