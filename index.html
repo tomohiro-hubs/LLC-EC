@@ -115,7 +115,7 @@
                         <span
                             class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full">実務会計版</span>
                     </h1>
-                    <p class="text-xs text-slate-400">個人（総支給・手取り）と法人（内部留保・納税）の完全分離分析</p>
+                    <p class="text-xs text-slate-400">個人（総支給・可処分キャッシュ）と法人（内部留保・納税）の完全分離分析</p>
                 </div>
             </div>
             <div class="text-xs text-slate-400 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
@@ -428,18 +428,18 @@
                                 class="font-bold text-slate-300">0</span>万</p>
                     </div>
 
-                    <!-- KPI 3: Individual Take-home (個人・実質手取り) -->
+                    <!-- KPI 3: Individual Disposable Cash (個人・可処分キャッシュ) -->
                     <div
                         class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-lg ring-1 ring-emerald-500/20">
                         <span class="text-xs font-semibold text-emerald-400 block truncate">
-                            【個人】実質手取り
+                            【個人】実質可処分キャッシュ
                         </span>
                         <div class="mt-2 flex items-baseline gap-1">
                             <span class="text-lg font-bold text-emerald-300 tracking-tight font-mono"
                                 id="kpi-personal-takehome">0</span>
                             <span class="text-[10px] text-slate-400">万円/年</span>
                         </div>
-                        <p class="text-[10px] text-slate-500 mt-1 truncate">月額手取：<span id="kpi-personal-monthly"
+                        <p class="text-[10px] text-slate-500 mt-1 truncate">月額換算：<span id="kpi-personal-monthly"
                                 class="font-mono text-slate-300 font-bold">0</span>万</p>
                     </div>
 
@@ -497,7 +497,7 @@
                                         class="text-xs font-normal"> 万円</span></span>
                             </div>
                             <div class="space-y-1.5 text-xs text-slate-300">
-                                <div class="flex justify-between text-emerald-400"><span>個人実質手取り:</span> <span
+                                <div class="flex justify-between text-emerald-400"><span>個人可処分キャッシュ:</span> <span
                                         class="font-mono">0 万</span></div>
                                 <div class="flex justify-between text-blue-400"><span>法人最終内部留保:</span> <span
                                         class="font-mono" id="sc-a-corp">0 万</span></div>
@@ -527,7 +527,7 @@
                                         class="text-xs font-normal"> 万円/年</span></span>
                             </div>
                             <div class="space-y-1.5 text-xs text-slate-300">
-                                <div class="flex justify-between text-emerald-300 font-semibold"><span>個人実質手取り:</span>
+                                <div class="flex justify-between text-emerald-300 font-semibold"><span>個人可処分キャッシュ:</span>
                                     <span class="font-mono" id="sc-b-personal">0 万</span></div>
                                 <div class="flex justify-between text-blue-400 font-semibold"><span>法人最終内部留保:</span>
                                     <span class="font-mono" id="sc-b-corp">0 万</span></div>
@@ -557,7 +557,7 @@
                                         class="text-xs font-normal"> 万円/年</span></span>
                             </div>
                             <div class="space-y-1.5 text-xs text-slate-300">
-                                <div class="flex justify-between text-emerald-300"><span>個人実質手取り:</span> <span
+                                <div class="flex justify-between text-emerald-300"><span>個人可処分キャッシュ:</span> <span
                                         class="font-mono" id="sc-c-personal">0 万</span></div>
                                 <div class="flex justify-between text-blue-400"><span>法人最終内部留保:</span> <span
                                         class="font-mono" id="sc-c-corp">0 万</span></div>
@@ -648,12 +648,16 @@
                                 <span class="font-mono text-red-400" id="breakdown-p-tax">0</span>
                             </div>
                             <div class="flex justify-between items-center text-slate-400 pl-8">
-                                <span>└ 住民税</span>
+                                <span>├ 住民税</span>
                                 <span class="font-mono text-red-400" id="breakdown-p-inhabitant">0</span>
+                            </div>
+                            <div class="flex justify-between items-center text-slate-400 pl-8">
+                                <span>└ 小規模企業共済/iDeCo掛金</span>
+                                <span class="font-mono text-red-400" id="breakdown-provident">0</span>
                             </div>
                             <div
                                 class="flex justify-between items-center text-emerald-400 font-bold pl-6 bg-emerald-950/10 py-1.5 rounded">
-                                <span>【個人】実質手取り (①)</span>
+                                <span>【個人】実質可処分キャッシュ (①)</span>
                                 <span class="font-mono" id="breakdown-p-net">0</span>
                             </div>
                             <div
@@ -675,7 +679,7 @@
                             </div>
                             <div
                                 class="flex justify-between items-center text-slate-400 pl-8 border-b border-slate-800/40 pb-1.5">
-                                <span>└ 消費税の損益影響（税込経理時のみ）</span>
+                                <span>└ 消費税の損益影響（益税/損税）</span>
                                 <span class="font-mono" id="breakdown-tax-impact">0</span>
                             </div>
                             <div class="flex justify-between items-center text-slate-400 pt-1.5">
@@ -714,9 +718,9 @@
                     <div class="flex flex-col gap-1 pb-4 border-b border-slate-800 mb-6">
                         <span class="text-base font-bold text-white flex items-center gap-2">
                             <i data-lucide="trending-up" class="text-emerald-400 w-5 h-5"></i>
-                            役員報酬額に応じた「個人手取り ⇄ 法人留保」トレードオフ曲線
+                            役員報酬額に応じた「個人可処分キャッシュ ⇄ 法人留保」トレードオフ曲線
                         </span>
-                        <p class="text-xs text-slate-400">役員報酬（横軸）を変動させた場合、個人の手取りと会社の内部留保、および支払う税金コストがどう推移するかを表します。</p>
+                        <p class="text-xs text-slate-400">役員報酬（横軸）を変動させた場合、個人の可処分キャッシュと会社の内部留保、および支払う税金コストがどう推移するかを表します。</p>
                     </div>
                     <div class="w-full min-h-[350px]">
                         <canvas id="chart-trend" class="w-full h-80"></canvas>
@@ -770,7 +774,7 @@
                                 class="mt-0.5 rounded border-slate-700 bg-slate-800 text-emerald-500 focus:ring-emerald-500">
                             <div>
                                 <strong class="text-white block mb-0.5">小規模企業共済等への加入検討</strong>
-                                個人手取りを最大化するため、代表者個人の所得から全額所得控除できる「小規模企業共済（月最大7万円）」や「iDeCo」を組み合わせるのが有効な節税策です。
+                                税負担を抑えながら資産形成するため、代表者個人の所得から全額所得控除できる「小規模企業共済（月最大7万円）」や「iDeCo」を組み合わせるのが有効です。
                             </div>
                         </div>
                     </div>
@@ -821,7 +825,7 @@
         let bSubcontractingRaw, bSubcontracting;
         let bGrossProfit, bSgaRaw, bSga;
         let bPreSalaryProfit, bSalary;
-        let bPShaho, bPTax, bPInhabitant, bPNet;
+        let bPShaho, bPTax, bPInhabitant, bProvident, bPNet;
         let bCIncome, bCShaho, bCTax, bCReserve;
         let bGrandTotal, advisoryContent;
 
@@ -902,6 +906,7 @@
             bPShaho = document.getElementById('breakdown-p-shaho');
             bPTax = document.getElementById('breakdown-p-tax');
             bPInhabitant = document.getElementById('breakdown-p-inhabitant');
+            bProvident = document.getElementById('breakdown-provident');
             bPNet = document.getElementById('breakdown-p-net');
 
             bCIncome = document.getElementById('breakdown-c-income');
@@ -959,6 +964,7 @@
             printPlPShaho = document.getElementById('print-pl-p-shaho');
             printPlPTax = document.getElementById('print-pl-p-tax');
             printPlPInhabitant = document.getElementById('print-pl-p-inhabitant');
+            printPlProvident = document.getElementById('print-pl-provident');
             printPlPNet = document.getElementById('print-pl-p-net');
             printPlCtPay = document.getElementById('print-pl-ct-pay');
             printPlCtImpact = document.getElementById('print-pl-ct-impact');
@@ -1072,9 +1078,8 @@
             }
 
             // 消費税の損益影響：
-            //  ・税抜経理 → 納付額は損益に乗らない（仮受・仮払の差額決済）。影響=0。
-            //  ・税込経理 → 「預かった税 − 申告納付額」が雑収入(益税)/雑損失となり損益に算入。
-            //    免税事業者は通常税込経理で、預かり全額(netTaxCollected相当)が益税として残る。
+            //  ・原則課税の税抜経理 → 仮受・仮払の差額決済なので、簡易試算上の損益影響は0。
+            //  ・税込経理、簡易課税、2割特例、免税 → 実際の納付額と実質税抜換算差額との差を益税/損税として反映。
             let consumptionTaxImpact = 0;
             if (accountingMethod === 'included') {
                 // 税込経理：売上・経費を税込で記帳し、納付額を租税公課に計上したのと同義
@@ -1092,8 +1097,8 @@
             }
 
             // 3. 法人所得・法人税
-            const grossProfit = Math.max(0, revenue - subcontracting);
-            const preSalaryOperatingProfit = Math.max(0, grossProfit - sga);
+            const grossProfit = revenue - subcontracting;
+            const preSalaryOperatingProfit = grossProfit - sga;
 
             // 法人課税所得 = 報酬前営業利益 - 役員報酬 - 会社社保負担 + 消費税損益影響
             const corpIncomeBeforeTax = preSalaryOperatingProfit - annualSalary - annualShahoEmployer + consumptionTaxImpact;
@@ -1145,7 +1150,8 @@
                 individualResidentTax = taxableIncomeRT * 0.10 + 0.5;
             }
 
-            const personalNetTakehome = Math.max(0, annualSalary - annualShahoEmployee - individualIncomeTax - individualResidentTax);
+            // 掛金は所得控除になる一方、当期の自由に使える現金からは流出する。
+            const personalNetTakehome = annualSalary - annualShahoEmployee - individualIncomeTax - individualResidentTax - providentDeduction;
             const totalCombinedCash = corpReserve + personalNetTakehome;
             const totalTaxAndShahoLoss = (annualShahoEmployer + annualShahoEmployee + corpTaxes + individualIncomeTax + individualResidentTax + Math.max(0, consumptionTaxToPay));
 
@@ -1161,6 +1167,7 @@
                 cShaho: annualShahoEmployer,
                 pTax: individualIncomeTax,
                 pInhabitant: individualResidentTax,
+                providentDeduction,
                 personalNet: personalNetTakehome,
                 totalCombinedCash,
                 totalTaxAndShahoLoss,
@@ -1182,7 +1189,7 @@
 
             const tempResult = calculateFinancials(revenue, subcontracting, sga, 0, ageGroup, providentDeductionType, taxType, industryRate, healthRate, accountingMethod);
             const preSalaryOperatingProfit = tempResult.preSalaryOperatingProfit;
-            const maxMonthlySim = Math.min(300, Math.ceil(preSalaryOperatingProfit / 12));
+            const maxMonthlySim = Math.max(0, Math.min(300, Math.ceil(preSalaryOperatingProfit / 12)));
 
             for (let m = 0; m <= maxMonthlySim; m += 1) {
                 const res = calculateFinancials(revenue, subcontracting, sga, m, ageGroup, providentDeductionType, taxType, industryRate, healthRate, accountingMethod);
@@ -1281,6 +1288,7 @@
             safeSetText(bPShaho, Math.round(currentRes.pShaho).toLocaleString());
             safeSetText(bPTax, Math.round(currentRes.pTax).toLocaleString());
             safeSetText(bPInhabitant, Math.round(currentRes.pInhabitant).toLocaleString());
+            safeSetText(bProvident, Math.round(currentRes.providentDeduction).toLocaleString());
             safeSetText(bPNet, Math.round(currentRes.personalNet).toLocaleString());
 
             safeSetText(bCIncome, Math.round(currentRes.corpIncomeBeforeTax).toLocaleString());
@@ -1380,6 +1388,7 @@
                 safeSetText(printPlPShaho, Math.round(currentRes.pShaho).toLocaleString());
                 safeSetText(printPlPTax, Math.round(currentRes.pTax).toLocaleString());
                 safeSetText(printPlPInhabitant, Math.round(currentRes.pInhabitant).toLocaleString());
+                safeSetText(printPlProvident, Math.round(currentRes.providentDeduction).toLocaleString());
                 safeSetText(printPlPNet, Math.round(currentRes.personalNet).toLocaleString());
                 safeSetText(printPlCtPay, Math.round(currentRes.consumptionTaxToPay).toLocaleString());
                 
@@ -1402,9 +1411,10 @@
             if (!chartCanvas) return;
             const ctx = chartCanvas.getContext('2d');
 
-            const safeReserveVal = res.corpReserve > 0 ? Math.round(res.corpReserve) : 0;
+            const safePersonalVal = Math.max(0, Math.round(res.personalNet));
+            const safeReserveVal = Math.max(0, Math.round(res.corpReserve));
             const dataValues = [
-                Math.round(res.personalNet),
+                safePersonalVal,
                 safeReserveVal,
                 Math.round(subcontracting),
                 Math.round(sga),
@@ -1418,7 +1428,7 @@
                 chartDist = new Chart(ctx, {
                     type: 'doughnut',
                     data: {
-                        labels: ['【個人】実質手取り', '【法人】最終内部留保', '外注費', '一般販管費', '国・社保への支払コスト'],
+                        labels: ['【個人】実質可処分キャッシュ', '【法人】最終内部留保', '外注費', '一般販管費', '国・社保への支払コスト'],
                         datasets: [{
                             data: dataValues,
                             backgroundColor: ['#34d399', '#60a5fa', '#f43f5e', '#f59e0b', '#ef4444'],
@@ -1448,9 +1458,9 @@
             const subcontracting = isTaxIncluded ? rawSubcontracting / 1.1 : rawSubcontracting;
             const sga = isTaxIncluded ? rawSga / 1.1 : rawSga;
 
-            const grossProfit = Math.max(0, revenue - subcontracting);
-            const preSalaryOperatingProfit = Math.max(0, grossProfit - sga);
-            const maxLimit = Math.min(300, Math.ceil(preSalaryOperatingProfit / 12));
+            const grossProfit = revenue - subcontracting;
+            const preSalaryOperatingProfit = grossProfit - sga;
+            const maxLimit = Math.max(0, Math.min(300, Math.ceil(preSalaryOperatingProfit / 12)));
             const step = Math.max(5, Math.ceil(maxLimit / 15));
 
             const labels = [];
@@ -1478,7 +1488,7 @@
                     data: {
                         labels: labels,
                         datasets: [
-                            { label: '個人手取り (①)', data: personalNetData, borderColor: '#34d399', backgroundColor: 'rgba(52, 211, 153, 0.1)', tension: 0.3, fill: false },
+                            { label: '個人可処分キャッシュ (①)', data: personalNetData, borderColor: '#34d399', backgroundColor: 'rgba(52, 211, 153, 0.1)', tension: 0.3, fill: false },
                             { label: '法人内部留保 (②)', data: corpReserveData, borderColor: '#60a5fa', backgroundColor: 'rgba(96, 165, 250, 0.1)', tension: 0.3, fill: false },
                             { label: '税金・社保負担総額', data: totalTaxData, borderColor: '#ef4444', backgroundColor: 'transparent', borderDash: [4, 4], tension: 0.1, fill: false }
                         ]
@@ -1508,13 +1518,13 @@
                 <div class="flex flex-col gap-3">
                     <div class="flex items-center gap-2 text-emerald-400 font-bold">
                         <i data-lucide="compass" class="w-4 h-4"></i>
-                        <span>【個人視点】給与設定と実質手取り</span>
+                        <span>【個人視点】給与設定と可処分キャッシュ</span>
                     </div>
                     <p class="text-slate-300 text-xs">
-                        現在の役員報酬設定では、年間額面総支給 <strong>${(currentRes.salaryAnnual).toLocaleString()}万円</strong> に対して、個人負担の社会保険料・所得税・住民税が引かれ、<strong>社長の手元に残る実質手取り（可処分所得）は年間 ${Math.round(currentRes.personalNet)}万円（月額換算約 ${Math.round(currentRes.personalNet / 12)}万円）</strong>となります。
+                        現在の役員報酬設定では、年間額面総支給 <strong>${(currentRes.salaryAnnual).toLocaleString()}万円</strong> に対して、個人負担の社会保険料・所得税・住民税・小規模企業共済/iDeCo掛金が引かれ、<strong>社長が当期に自由に使える実質可処分キャッシュは年間 ${Math.round(currentRes.personalNet)}万円（月額換算約 ${Math.round(currentRes.personalNet / 12)}万円）</strong>となります。
                     </p>
                     <p class="text-slate-300 text-xs">
-                        給与総支給を引き上げると給与所得控除による経費化メリットを受けられますが、累進課税と社会保険料（労使合計で報酬の約30%）の負担が手取り率を押し下げます。自身の生活コストをベースに、分離して最適な支給額を決定してください。
+                        給与総支給を引き上げると給与所得控除による経費化メリットを受けられますが、累進課税と社会保険料（労使合計で報酬の約30%）の負担が可処分率を押し下げます。共済/iDeCoは資産形成効果がありますが当期キャッシュは減るため、生活コストと分離して最適な支給額を決定してください。
                     </p>
                 </div>
             `;
@@ -1862,7 +1872,8 @@
 - **社会保険料 (個人負担分)**: ${formatMan(currentRes.pShaho)}
 - **所得税 (復興税含む)**: ${formatMan(currentRes.pTax)}
 - **住民税**: ${formatMan(currentRes.pInhabitant)}
-- **【個人】実質手取り（可処分所得）**: ${formatMan(currentRes.personalNet)} (月額換算: 約${formatMan(currentRes.personalNet / 12)})
+- **小規模企業共済/iDeCo掛金（当期キャッシュ流出）**: ${formatMan(currentRes.providentDeduction)}
+- **【個人】実質可処分キャッシュ**: ${formatMan(currentRes.personalNet)} (月額換算: 約${formatMan(currentRes.personalNet / 12)})
 
 #### 【納税・社保支払合計】
 - **国・自治体・社保への総支払額**: ${formatMan(currentRes.totalTaxAndShahoLoss)}
@@ -1870,7 +1881,7 @@
   - 消費税申告納税額: ${formatMan(currentRes.consumptionTaxToPay)}
 
 #### 【総合手残り】
-- **個人＋法人 合計キャッシュ**: ${formatMan(currentRes.totalCombinedCash)}
+- **個人＋法人 合計キャッシュ**: ${formatMan(currentRes.totalCombinedCash)}（個人側は共済/iDeCo掛金控除後）
 
 ---
 
@@ -1885,15 +1896,15 @@
 
 ### 4. 役員報酬シナリオ比較 (年間キャッシュ)
 - **パターンA (役員報酬ゼロ)**:
-  - 個人手取り: 0万円
+  - 個人可処分キャッシュ: 0万円
   - 法人内部留保: ${formatMan(zeroRes.corpReserve)}
   - 個人＋法人 合計キャッシュ: ${formatMan(zeroRes.totalCombinedCash)}
 - **パターンB (設定中: 月額${monthlySalary}万円)**:
-  - 個人手取り: ${formatMan(currentRes.personalNet)}
+  - 個人可処分キャッシュ: ${formatMan(currentRes.personalNet)}
   - 法人内部留保: ${formatMan(currentRes.corpReserve)}
   - 個人＋法人 合計キャッシュ: ${formatMan(currentRes.totalCombinedCash)}
 - **パターンC (税理・社保最適報酬: 月額${optimalRes.monthly}万円)**:
-  - 個人手取り: ${formatMan(optimalRes.result.personalNet)}
+  - 個人可処分キャッシュ: ${formatMan(optimalRes.result.personalNet)}
   - 法人内部留保: ${formatMan(optimalRes.result.corpReserve)}
   - 個人＋法人 合計キャッシュ: ${formatMan(optimalRes.result.totalCombinedCash)}
   ${optimalRes.monthly !== monthlySalary && Math.round(optimalRes.result.totalCombinedCash - currentRes.totalCombinedCash) > 0 ? "※最適報酬にすることで、現在より年間約 " + Math.round(optimalRes.result.totalCombinedCash - currentRes.totalCombinedCash) + "万円 合計手残りキャッシュが増加します。" : ''}
@@ -1905,8 +1916,8 @@
 
 1. **役員報酬最適化分析**:
    現在の設定（パターンB）と最適報酬（パターンC）を比較し、合計キャッシュが増減する主たる原因（税率と社会保険料の境界線の影響など）を明らかにしてください。
-2. **法人の内部留保と個人手取りの適正バランス**:
-   売上規模や事業の特性を考慮したとき、現在の「法人留保」と「個人手取り」の比率は財務戦略上どのように評価できますか？将来の投資資金や運転資金確保の観点も含めて教えてください。
+2. **法人の内部留保と個人可処分キャッシュの適正バランス**:
+   売上規模や事業の特性を考慮したとき、現在の「法人留保」と「個人可処分キャッシュ」の比率は財務戦略上どのように評価できますか？将来の投資資金や運転資金確保の観点も含めて教えてください。
 3. **消費税・経費の最適化プラン**:
    現在の消費税課税区分・経理方式におけるアドバイスと、販管費（経費）の使い方の最適化（どのような経費を増やすべきか、または法人化のメリットを活かした経費化など）について提案してください。
 4. **追加の財務・節税スキームの推奨**:
@@ -2079,13 +2090,13 @@
 
             <div style="margin-top: 32px;">
                 <h2 style="font-size: 16px; font-weight: bold; color: #1e293b; border-left: 4px solid #059669; padding-left: 8px; margin-bottom: 12px;">2. 役員報酬シナリオ 3パターン比較</h2>
-                <p style="font-size: 11px; color: #64748b; margin-bottom: 8px;">※金額単位：万円/年。個人手取りおよび法人内部留保は、社会保険料・税金を差し引いた実質的な獲得キャッシュです。</p>
+                <p style="font-size: 11px; color: #64748b; margin-bottom: 8px;">※金額単位：万円/年。個人可処分キャッシュは、社会保険料・税金・共済/iDeCo掛金を差し引いた当期の自由資金です。</p>
                 <table>
                     <thead>
                         <tr>
                             <th>シナリオ</th>
                             <th>年間総支給</th>
-                            <th>個人手取り</th>
+                            <th>個人可処分キャッシュ</th>
                             <th>法人内部留保</th>
                             <th>社会保険料</th>
                             <th>税金合計</th>
@@ -2185,11 +2196,15 @@
                         <td id="print-pl-p-tax" style="text-align: right; color: #b91c1c;"></td>
                     </tr>
                     <tr>
-                        <td style="padding-left: 20px; color: #475569;">└ 住民税</td>
+                        <td style="padding-left: 20px; color: #475569;">├ 住民税</td>
                         <td id="print-pl-p-inhabitant" style="text-align: right; color: #b91c1c;"></td>
                     </tr>
+                    <tr>
+                        <td style="padding-left: 20px; color: #475569;">└ 小規模企業共済/iDeCo掛金</td>
+                        <td id="print-pl-provident" style="text-align: right; color: #b91c1c;"></td>
+                    </tr>
                     <tr style="background-color: #dcfce7;">
-                        <td class="print-bold" style="color: #166534; padding-left: 12px;">【個人】実質手取り (①)</td>
+                        <td class="print-bold" style="color: #166534; padding-left: 12px;">【個人】実質可処分キャッシュ (①)</td>
                         <td id="print-pl-p-net" style="text-align: right; color: #166534;" class="print-bold"></td>
                     </tr>
                     <tr style="background-color: #f8fafc;">
@@ -2227,8 +2242,8 @@
                 <h2 style="font-size: 14px; font-weight: bold; color: #1e293b; border-left: 4px solid #059669; padding-left: 8px; margin-bottom: 8px;">4. 財務・税務からの戦略的アドバイス</h2>
                 <div style="display: flex; gap: 16px;">
                     <div style="flex: 1; padding: 10px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; font-size: 10px; line-height: 1.5;">
-                        <h3 style="font-weight: bold; color: #166534; margin: 0 0 4px 0;">【個人視点】役員報酬と手取り最大化</h3>
-                        役員報酬を設定することは、給与所得控除を活用した経費化のメリットを得る一方、社会保険料（労使合計で約30%）と累進的な所得税率の上昇というコストを伴います。ご自身の実際の生活維持コスト（生存年収）を見極め、手取り効率が著しく低下する水準を超えないよう調整することが重要です。
+                        <h3 style="font-weight: bold; color: #166534; margin: 0 0 4px 0;">【個人視点】役員報酬と可処分キャッシュ</h3>
+                        役員報酬を設定することは、給与所得控除を活用した経費化のメリットを得る一方、社会保険料（労使合計で約30%）と累進的な所得税率の上昇というコストを伴います。ご自身の実際の生活維持コスト（生存年収）を見極め、可処分キャッシュが過度に低下しないよう調整することが重要です。
                     </div>
                     <div style="flex: 1; padding: 10px; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; font-size: 10px; line-height: 1.5;">
                         <h3 style="font-weight: bold; color: #1e40af; margin: 0 0 4px 0;">【法人視点】内部留保と税額バランス</h3>
