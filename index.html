@@ -202,7 +202,7 @@
                         <span class="text-xs text-emerald-400 font-bold" id="label-revenue">1,200 万円</span>
                     </div>
                     <div class="relative">
-                        <input type="range" id="input-revenue" min="100" max="10000" step="50" value="1200"
+                        <input type="range" id="input-revenue" min="100" max="10000" step="5" value="1200"
                             class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500">
                         <div class="flex justify-between text-[10px] text-slate-500 mt-1">
                             <span>100万</span>
@@ -211,7 +211,7 @@
                             <span>10,000万</span>
                         </div>
                     </div>
-                    <input type="number" id="num-revenue" value="1200"
+                    <input type="number" id="num-revenue" value="1200" step="5"
                         class="mt-2 w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 text-right font-mono">
                 </div>
 
@@ -994,26 +994,35 @@
             return clampValue(snapped, min, max);
         }
 
+        function getSliderBounds(slider) {
+            return {
+                min: parseFloat(slider.min),
+                max: parseFloat(slider.max),
+                step: parseFloat(slider.step) || 5
+            };
+        }
+
+        function syncInputPairValue(slider, number, rawValue) {
+            const { min, max, step } = getSliderBounds(slider);
+            const normalized = snapValueToStep(rawValue, min, max, step);
+            slider.value = normalized;
+            number.value = normalized;
+            return normalized;
+        }
+
         function setupSyncedInputs(sliderId, numberId) {
             const slider = document.getElementById(sliderId);
             const number = document.getElementById(numberId);
             if (!slider || !number) return;
-            const min = parseFloat(slider.min);
-            const max = parseFloat(slider.max);
-            const step = parseFloat(slider.step) || 5;
 
             slider.addEventListener('input', (e) => {
-                const snapped = snapValueToStep(parseFloat(e.target.value), min, max, step);
-                slider.value = snapped;
-                number.value = snapped;
+                syncInputPairValue(slider, number, parseFloat(e.target.value));
                 calculateAll();
             });
             number.addEventListener('input', (e) => {
                 let val = parseFloat(e.target.value);
                 if (isNaN(val)) val = 0;
-                const snapped = snapValueToStep(val, min, max, step);
-                slider.value = snapped;
-                number.value = snapped;
+                syncInputPairValue(slider, number, val);
                 calculateAll();
             });
         }
@@ -1577,23 +1586,28 @@
         function setupTaxModeSwitchers() {
             const btnExclude = document.getElementById('btn-tax-exclude');
             const btnInclude = document.getElementById('btn-tax-include');
+            const syncTaxableInputs = (multiplier) => {
+                const pairs = [
+                    ['input-revenue', 'num-revenue'],
+                    ['input-subcontracting', 'num-subcontracting'],
+                    ['input-sga', 'num-sga']
+                ];
+
+                pairs.forEach(([sliderId, numberId]) => {
+                    const slider = document.getElementById(sliderId);
+                    const number = document.getElementById(numberId);
+                    if (!slider || !number) return;
+
+                    const nextValue = Math.round(parseFloat(slider.value) * multiplier);
+                    syncInputPairValue(slider, number, nextValue);
+                });
+            };
 
             if (btnExclude) {
                 btnExclude.addEventListener('click', () => {
                     if (isTaxIncluded) {
                         isTaxIncluded = false;
-                        const rev = document.getElementById('input-revenue');
-                        const sub = document.getElementById('input-subcontracting');
-                        const sga = document.getElementById('input-sga');
-                        if (rev) rev.value = Math.round(parseFloat(rev.value) / 1.1);
-                        if (sub) sub.value = Math.round(parseFloat(sub.value) / 1.1);
-                        if (sga) sga.value = Math.round(parseFloat(sga.value) / 1.1);
-                        const numRev = document.getElementById('num-revenue');
-                        const numSub = document.getElementById('num-subcontracting');
-                        const numSgaEl = document.getElementById('num-sga');
-                        if (numRev && rev) numRev.value = rev.value;
-                        if (numSub && sub) numSub.value = sub.value;
-                        if (numSgaEl && sga) numSgaEl.value = sga.value;
+                        syncTaxableInputs(1 / 1.1);
                         updateTaxModeUI();
                         calculateAll();
                     }
@@ -1603,18 +1617,7 @@
                 btnInclude.addEventListener('click', () => {
                     if (!isTaxIncluded) {
                         isTaxIncluded = true;
-                        const rev = document.getElementById('input-revenue');
-                        const sub = document.getElementById('input-subcontracting');
-                        const sga = document.getElementById('input-sga');
-                        if (rev) rev.value = Math.round(parseFloat(rev.value) * 1.1);
-                        if (sub) sub.value = Math.round(parseFloat(sub.value) * 1.1);
-                        if (sga) sga.value = Math.round(parseFloat(sga.value) * 1.1);
-                        const numRev = document.getElementById('num-revenue');
-                        const numSub = document.getElementById('num-subcontracting');
-                        const numSgaEl = document.getElementById('num-sga');
-                        if (numRev && rev) numRev.value = rev.value;
-                        if (numSub && sub) numSub.value = sub.value;
-                        if (numSgaEl && sga) numSgaEl.value = sga.value;
+                        syncTaxableInputs(1.1);
                         updateTaxModeUI();
                         calculateAll();
                     }
@@ -1709,14 +1712,17 @@
                 if (el && val !== undefined) el.value = val;
             };
 
-            setVal('input-revenue', data.revenue);
-            setVal('num-revenue', data.revenue);
-            setVal('input-subcontracting', data.subcontracting);
-            setVal('num-subcontracting', data.subcontracting);
-            setVal('input-sga', data.sga);
-            setVal('num-sga', data.sga);
-            setVal('input-salary', data.salary);
-            setVal('num-salary', data.salary);
+            const syncPair = (sliderId, numberId, value) => {
+                const slider = document.getElementById(sliderId);
+                const number = document.getElementById(numberId);
+                if (!slider || !number || value === undefined) return;
+                syncInputPairValue(slider, number, parseFloat(value));
+            };
+
+            syncPair('input-revenue', 'num-revenue', data.revenue);
+            syncPair('input-subcontracting', 'num-subcontracting', data.subcontracting);
+            syncPair('input-sga', 'num-sga', data.sga);
+            syncPair('input-salary', 'num-salary', data.salary);
             
             if (data.ageGroup) setVal('select-age', data.ageGroup);
             if (data.provident) setVal('input-provident', data.provident);

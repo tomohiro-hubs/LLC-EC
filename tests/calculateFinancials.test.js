@@ -36,12 +36,14 @@ function loadInputHelpers() {
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   const snippets = [
     extract(html, /function clampValue\(value, min, max\) \{[\s\S]*?\n        \}/, 'clampValue'),
-    extract(html, /function snapValueToStep\(value, min, max, step\) \{[\s\S]*?\n        \}/, 'snapValueToStep')
+    extract(html, /function snapValueToStep\(value, min, max, step\) \{[\s\S]*?\n        \}/, 'snapValueToStep'),
+    extract(html, /function getSliderBounds\(slider\) \{[\s\S]*?\n        \}/, 'getSliderBounds'),
+    extract(html, /function syncInputPairValue\(slider, number, rawValue\) \{[\s\S]*?\n        \}/, 'syncInputPairValue')
   ];
 
   const script = `
 ${snippets.join('\n\n')}
-module.exports = { clampValue, snapValueToStep };
+module.exports = { clampValue, snapValueToStep, getSliderBounds, syncInputPairValue };
 `;
 
   const context = { module: { exports: {} }, exports: {} };
@@ -49,8 +51,13 @@ module.exports = { clampValue, snapValueToStep };
   return context.module.exports;
 }
 
+function loadMarkup() {
+  return fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+}
+
 const calculateFinancials = loadCalculateFinancials();
-const { snapValueToStep } = loadInputHelpers();
+const { snapValueToStep, syncInputPairValue } = loadInputHelpers();
+const htmlMarkup = loadMarkup();
 
 function runScenario(taxType, industryRate = 0.5) {
   return calculateFinancials(1000, 200, 100, 0, 'under40', '0', taxType, industryRate, 0.1, 'excluded');
@@ -84,9 +91,25 @@ function testSnapValueToStepRoundsToNearestFiveWithinRange() {
   assert.strictEqual(snapValueToStep(5003, 0, 5000, 5), 5000);
 }
 
+function testRevenueInputsUseFiveManStep() {
+  assert.match(htmlMarkup, /<input type="range" id="input-revenue" min="100" max="10000" step="5" value="1200"/);
+  assert.match(htmlMarkup, /<input type="number" id="num-revenue" value="1200" step="5"/);
+}
+
+function testSyncInputPairValueSnapsMisalignedValues() {
+  const slider = { min: '100', max: '10000', step: '5', value: '1200' };
+  const number = { value: '1200' };
+  const synced = syncInputPairValue(slider, number, 1209);
+  assert.strictEqual(synced, 1210);
+  assert.strictEqual(slider.value, 1210);
+  assert.strictEqual(number.value, 1210);
+}
+
 testPrincipleTaxPaidTracksExpenseTax();
 testSimplifiedTaxPaidIsNotCountedButImpactStillUsesActualExpenseTax();
 testTwowariTaxPaidIsNotCountedButImpactStillUsesActualExpenseTax();
 testSnapValueToStepRoundsToNearestFiveWithinRange();
+testRevenueInputsUseFiveManStep();
+testSyncInputPairValueSnapsMisalignedValues();
 
 console.log('calculateFinancials tax treatment tests passed');
