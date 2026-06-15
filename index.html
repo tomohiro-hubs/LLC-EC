@@ -670,7 +670,7 @@
                                 <span class="font-mono text-emerald-500" id="breakdown-tax-received">0</span>
                             </div>
                             <div class="flex justify-between items-center text-slate-400 pl-8">
-                                <span>├ 支払い消費税 (外注・経費)</span>
+                                <span>├ 支払い消費税 (控除対象)</span>
                                 <span class="font-mono text-red-400" id="breakdown-tax-paid">0</span>
                             </div>
                             <div class="flex justify-between items-center text-slate-400 pl-8">
@@ -1063,8 +1063,9 @@
 
             // 2. 消費税の計算
             const taxReceived = revenue * 0.10;
-            const taxPaidOnExpenses = (subcontracting + sga) * 0.10;
-            const netTaxCollected = taxReceived - taxPaidOnExpenses;
+            const actualTaxPaidOnExpenses = (subcontracting + sga) * 0.10;
+            const taxPaidOnExpenses = taxType === 'principle' ? actualTaxPaidOnExpenses : 0;
+            const netTaxCollected = taxReceived - actualTaxPaidOnExpenses;
 
             let consumptionTaxToPay = 0;
             if (taxType === 'principle') {

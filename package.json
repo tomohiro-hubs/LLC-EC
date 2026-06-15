@@ -4,7 +4,8 @@
   "description": "LLC Simulator Web App",
   "main": "server.js",
   "scripts": {
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "test": "node tests/calculateFinancials.test.js"
   },
   "keywords": [],
   "author": "",
