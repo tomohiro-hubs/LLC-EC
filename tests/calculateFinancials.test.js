@@ -32,7 +32,25 @@ module.exports = { calculateFinancials };
   return context.module.exports.calculateFinancials;
 }
 
+function loadInputHelpers() {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const snippets = [
+    extract(html, /function clampValue\(value, min, max\) \{[\s\S]*?\n        \}/, 'clampValue'),
+    extract(html, /function snapValueToStep\(value, min, max, step\) \{[\s\S]*?\n        \}/, 'snapValueToStep')
+  ];
+
+  const script = `
+${snippets.join('\n\n')}
+module.exports = { clampValue, snapValueToStep };
+`;
+
+  const context = { module: { exports: {} }, exports: {} };
+  vm.runInNewContext(script, context);
+  return context.module.exports;
+}
+
 const calculateFinancials = loadCalculateFinancials();
+const { snapValueToStep } = loadInputHelpers();
 
 function runScenario(taxType, industryRate = 0.5) {
   return calculateFinancials(1000, 200, 100, 0, 'under40', '0', taxType, industryRate, 0.1, 'excluded');
@@ -59,8 +77,16 @@ function testTwowariTaxPaidIsNotCountedButImpactStillUsesActualExpenseTax() {
   assert.strictEqual(result.consumptionTaxImpact, 50);
 }
 
+function testSnapValueToStepRoundsToNearestFiveWithinRange() {
+  assert.strictEqual(snapValueToStep(123, 0, 5000, 5), 125);
+  assert.strictEqual(snapValueToStep(122, 0, 5000, 5), 120);
+  assert.strictEqual(snapValueToStep(-1, 0, 5000, 5), 0);
+  assert.strictEqual(snapValueToStep(5003, 0, 5000, 5), 5000);
+}
+
 testPrincipleTaxPaidTracksExpenseTax();
 testSimplifiedTaxPaidIsNotCountedButImpactStillUsesActualExpenseTax();
 testTwowariTaxPaidIsNotCountedButImpactStillUsesActualExpenseTax();
+testSnapValueToStepRoundsToNearestFiveWithinRange();
 
 console.log('calculateFinancials tax treatment tests passed');
