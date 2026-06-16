@@ -1850,8 +1850,6 @@
             const accountingMethod = document.getElementById('select-accounting')?.value || 'excluded';
 
             const currentRes = calculateFinancials(rawRevenue, rawSubcontracting, rawSga, monthlySalary, ageGroup, provident, taxType, industryRate, healthRate, accountingMethod);
-            const optimalRes = findOptimalSalary(rawRevenue, rawSubcontracting, rawSga, ageGroup, provident, taxType, industryRate, healthRate, accountingMethod);
-            const zeroRes = calculateFinancials(rawRevenue, rawSubcontracting, rawSga, 0, ageGroup, provident, taxType, industryRate, healthRate, accountingMethod);
 
             const formatMan = (num) => Math.round(num).toLocaleString() + '万円';
 
@@ -1919,28 +1917,11 @@
 
 ---
 
-### 4. 役員報酬シナリオ比較 (年間キャッシュ)
-- **パターンA (役員報酬ゼロ)**:
-  - 個人可処分キャッシュ: 0万円
-  - 法人内部留保: ${formatMan(zeroRes.corpReserve)}
-  - 個人＋法人 合計キャッシュ: ${formatMan(zeroRes.totalCombinedCash)}
-- **パターンB (設定中: 月額${monthlySalary}万円)**:
-  - 個人可処分キャッシュ: ${formatMan(currentRes.personalNet)}
-  - 法人内部留保: ${formatMan(currentRes.corpReserve)}
-  - 個人＋法人 合計キャッシュ: ${formatMan(currentRes.totalCombinedCash)}
-- **パターンC (税理・社保最適報酬: 月額${optimalRes.monthly}万円)**:
-  - 個人可処分キャッシュ: ${formatMan(optimalRes.result.personalNet)}
-  - 法人内部留保: ${formatMan(optimalRes.result.corpReserve)}
-  - 個人＋法人 合計キャッシュ: ${formatMan(optimalRes.result.totalCombinedCash)}
-  ${optimalRes.monthly !== monthlySalary && Math.round(optimalRes.result.totalCombinedCash - currentRes.totalCombinedCash) > 0 ? "※最適報酬にすることで、現在より年間約 " + Math.round(optimalRes.result.totalCombinedCash - currentRes.totalCombinedCash) + "万円 合計手残りキャッシュが増加します。" : ''}
-
----
-
 ### 質問・分析依頼
 上記のシミュレーション結果をもとに、以下の点について分析と具体的な対策を提示してください：
 
-1. **役員報酬最適化分析**:
-   現在の設定（パターンB）と最適報酬（パターンC）を比較し、合計キャッシュが増減する主たる原因（税率と社会保険料の境界線の影響など）を明らかにしてください。
+1. **現在の役員報酬設定の妥当性分析**:
+   現在の設定（月額${monthlySalary}万円）における税負担と社会保険料負担のバランスについて、改善の余地があるか分析してください。
 2. **法人の内部留保と個人可処分キャッシュの適正バランス**:
    売上規模や事業の特性を考慮したとき、現在の「法人留保」と「個人可処分キャッシュ」の比率は財務戦略上どのように評価できますか？将来の投資資金や運転資金確保の観点も含めて教えてください。
 3. **消費税・経費の最適化プラン**:
