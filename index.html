@@ -119,7 +119,7 @@
                 </div>
             </div>
             <div class="text-xs text-slate-400 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
-                <span class="font-semibold text-emerald-400">前提税制:</span> 2025年改正準拠（令和7年度・協会けんぽ料率／簡易計算）
+                <span class="font-semibold text-emerald-400">前提税制:</span> 2026年改正準拠（令和8年度・協会けんぽ料率／簡易計算）
             </div>
         </div>
     </header>
@@ -301,9 +301,9 @@
                         <select id="select-health-rate"
                             class="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
                             <option value="0.0944">沖縄 9.44%（最低）</option>
-                            <option value="0.0991">東京 9.91%</option>
-                            <option value="0.1000" selected>全国平均 10.00%</option>
-                            <option value="0.1078">佐賀 10.78%（最高）</option>
+                            <option value="0.0985">東京 9.85%</option>
+                            <option value="0.0990" selected>全国平均 9.90%</option>
+                            <option value="0.1055">佐賀 10.55%（最高）</option>
                         </select>
                     </div>
 
@@ -392,6 +392,11 @@
                     class="px-5 py-2 text-sm font-medium rounded-lg text-slate-400 hover:text-white transition-all flex items-center gap-2">
                     <i data-lucide="line-chart" class="w-4 h-4"></i>
                     <span>多角・最適化分析</span>
+                </button>
+                <button id="tab-payroll"
+                    class="px-5 py-2 text-sm font-medium rounded-lg text-slate-400 hover:text-white transition-all flex items-center gap-2">
+                    <i data-lucide="receipt-text" class="w-4 h-4"></i>
+                    <span>給与計算</span>
                 </button>
             </div>
 
@@ -782,17 +787,178 @@
 
             </div>
 
+            <!-- TAB CONTENT 3: Monthly Payroll View -->
+            <div id="content-payroll" class="flex flex-col gap-6 hidden">
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    <div class="xl:col-span-2 bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col gap-5">
+                        <div class="flex flex-col gap-1 pb-4 border-b border-slate-800">
+                            <span class="text-base font-bold text-white flex items-center gap-2">
+                                <i data-lucide="wallet-cards" class="text-emerald-400 w-5 h-5"></i>
+                                はじめての給与明細シミュレーション
+                            </span>
+                            <p class="text-xs text-slate-400">左の「設定役員報酬（月額）」を総支給額として、役員1名分の月次給与を実務寄りに簡易計算します。</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4">
+                                <span class="text-xs text-slate-400">総支給額（月額）</span>
+                                <div class="mt-2 text-2xl font-bold text-emerald-400 font-mono"><span id="payroll-gross">0</span><span class="text-xs text-slate-400 ml-1">円</span></div>
+                                <p class="mt-2 text-[11px] text-slate-500">役員報酬の額面です。ここから社保・税金が引かれます。</p>
+                            </div>
+                            <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4">
+                                <span class="text-xs text-slate-400">差引支給額</span>
+                                <div class="mt-2 text-2xl font-bold text-white font-mono"><span id="payroll-net-pay">0</span><span class="text-xs text-slate-400 ml-1">円</span></div>
+                                <p class="mt-2 text-[11px] text-slate-500">社長個人の口座に振り込む目安です。</p>
+                            </div>
+                            <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4">
+                                <span class="text-xs text-slate-400">会社負担額</span>
+                                <div class="mt-2 text-2xl font-bold text-blue-400 font-mono"><span id="payroll-employer-total">0</span><span class="text-xs text-slate-400 ml-1">円</span></div>
+                                <p class="mt-2 text-[11px] text-slate-500">会社が別途負担する社会保険料です。</p>
+                            </div>
+                            <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4">
+                                <span class="text-xs text-slate-400">会社の総コスト</span>
+                                <div class="mt-2 text-2xl font-bold text-amber-400 font-mono"><span id="payroll-total-company-cost">0</span><span class="text-xs text-slate-400 ml-1">円</span></div>
+                                <p class="mt-2 text-[11px] text-slate-500">総支給額 + 会社負担額の合計です。</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                            <div class="flex flex-col gap-2">
+                                <label for="input-payroll-dependents" class="text-sm text-slate-300">扶養人数</label>
+                                <select id="input-payroll-dependents"
+                                    class="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                                    <option value="0" selected>0人</option>
+                                    <option value="1">1人</option>
+                                    <option value="2">2人</option>
+                                    <option value="3">3人</option>
+                                    <option value="4">4人</option>
+                                    <option value="5">5人</option>
+                                </select>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <label for="select-payroll-tax-mode" class="text-sm text-slate-300">源泉区分</label>
+                                <select id="select-payroll-tax-mode"
+                                    class="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                                    <option value="kou" selected>甲欄（主たる給与）</option>
+                                    <option value="otsu">乙欄（従たる給与）</option>
+                                </select>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <label for="input-payroll-resident-tax" class="text-sm text-slate-300">住民税（月額）</label>
+                                <input type="number" id="input-payroll-resident-tax" value="0" min="0" step="100"
+                                    class="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 text-right font-mono">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-5">
+                                <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                                    <span class="text-sm font-bold text-white">本人控除（給与から引かれるもの）</span>
+                                    <span class="text-xs text-slate-500">月額</span>
+                                </div>
+                                <div class="space-y-2 text-sm mt-4">
+                                    <div class="flex justify-between text-slate-300"><span>健康保険</span><span id="payroll-employee-health" class="font-mono">0円</span></div>
+                                    <div class="flex justify-between text-slate-300"><span>介護保険</span><span id="payroll-employee-care" class="font-mono">0円</span></div>
+                                    <div class="flex justify-between text-slate-500"><span>子ども・子育て支援金</span><span id="payroll-employee-childcare" class="font-mono">0円</span></div>
+                                    <div class="flex justify-between text-slate-300"><span>厚生年金</span><span id="payroll-employee-pension" class="font-mono">0円</span></div>
+                                    <div class="flex justify-between text-slate-300"><span>源泉所得税</span><span id="payroll-withholding-tax" class="font-mono">0円</span></div>
+                                    <div class="flex justify-between text-slate-300"><span>住民税</span><span id="payroll-resident-tax" class="font-mono">0円</span></div>
+                                    <div class="flex justify-between text-rose-300 font-semibold pt-2 border-t border-slate-800"><span>本人控除合計</span><span id="payroll-employee-total" class="font-mono">0円</span></div>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-5">
+                                <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                                    <span class="text-sm font-bold text-white">会社負担（会社が別途払うもの）</span>
+                                    <span class="text-xs text-slate-500">月額</span>
+                                </div>
+                                <div class="space-y-2 text-sm mt-4">
+                                    <div class="flex justify-between text-slate-300"><span>健康保険</span><span id="payroll-employer-health" class="font-mono">0円</span></div>
+                                    <div class="flex justify-between text-slate-300"><span>介護保険</span><span id="payroll-employer-care" class="font-mono">0円</span></div>
+                                    <div class="flex justify-between text-slate-300"><span>子ども・子育て支援金</span><span id="payroll-employer-childcare" class="font-mono">0円</span></div>
+                                    <div class="flex justify-between text-slate-300"><span>厚生年金</span><span id="payroll-employer-pension" class="font-mono">0円</span></div>
+                                    <div class="flex justify-between text-blue-300 font-semibold pt-2 border-t border-slate-800"><span>会社負担合計</span><span id="payroll-employer-total-detail" class="font-mono">0円</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-5">
+                            <div class="flex items-center gap-2 pb-3 border-b border-slate-800">
+                                <i data-lucide="file-text" class="w-4 h-4 text-emerald-400"></i>
+                                <span class="text-sm font-bold text-white">この明細の見方</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-300 leading-relaxed mt-4">
+                                <div class="p-3 rounded-lg bg-slate-950 border border-slate-800">
+                                    <strong class="text-white block mb-1">このページで分かること</strong>
+                                    役員報酬の月額を決めたときに、個人の振込額と会社の実際コストがどこまで離れるかをひと目で確認できます。
+                                </div>
+                                <div class="p-3 rounded-lg bg-slate-950 border border-slate-800">
+                                    <strong class="text-white block mb-1">最初の支給で決めるもの</strong>
+                                    扶養人数、甲欄か乙欄か、住民税通知額の3点が主な判断材料です。通常は役員1社目なら甲欄、住民税は通知前なら0円で始まることがあります。
+                                </div>
+                                <div class="p-3 rounded-lg bg-slate-950 border border-slate-800">
+                                    <strong class="text-white block mb-1">住民税が0円でも不自然ではないケース</strong>
+                                    前年所得がない、開業初年度、普通徴収のまま、自治体通知がまだ届いていない場合は月次控除が0円のことがあります。
+                                </div>
+                                <div class="p-3 rounded-lg bg-slate-950 border border-slate-800">
+                                    <strong class="text-white block mb-1">源泉所得税と年末調整の関係</strong>
+                                    毎月の源泉税は仮払いです。扶養異動や年末調整で最終精算されるため、月ごとの差は年末に調整されます。
+                                </div>
+                                <div class="p-3 rounded-lg bg-slate-950 border border-slate-800">
+                                    <strong class="text-white block mb-1">会社が別途負担する金額</strong>
+                                    給与を40万円払うなら、会社は40万円だけでは済まず、健康保険・厚生年金・子ども子育て支援金も追加で支払います。
+                                </div>
+                                <div class="p-3 rounded-lg bg-amber-950/10 border border-amber-500/20 text-amber-200">
+                                    <strong class="text-white block mb-1">注意</strong>
+                                    簡易計算です。標準報酬月額等級、端数処理、自治体差、扶養の詳細、賞与、通勤費、現物給与、年末調整は簡略化しています。実支給前に社労士・税理士で確認してください。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col gap-5">
+                        <div class="pb-4 border-b border-slate-800">
+                            <span class="text-base font-bold text-white flex items-center gap-2">
+                                <i data-lucide="calculator" class="text-blue-400 w-5 h-5"></i>
+                                給与計算の前提
+                            </span>
+                            <p class="text-xs text-slate-400 mt-1">会社経営が初めての人向けに、最低限の前提だけを表示しています。</p>
+                        </div>
+                        <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
+                            <div class="p-3 bg-slate-900/50 border border-slate-800 rounded-lg">
+                                <strong class="text-white block mb-1">対象</strong>
+                                役員1名、月額固定、賞与なし、残業なし、通勤費なし、現物給与なしを前提にしています。
+                            </div>
+                            <div class="p-3 bg-slate-900/50 border border-slate-800 rounded-lg">
+                                <strong class="text-white block mb-1">社会保険</strong>
+                                健康保険・介護保険・厚生年金は、左カラムの年齢区分と健康保険料率を再利用しています。
+                            </div>
+                            <div class="p-3 bg-slate-900/50 border border-slate-800 rounded-lg">
+                                <strong class="text-white block mb-1">源泉所得税</strong>
+                                国税庁の令和8年分電算式ベースで甲欄・乙欄を簡易実装しています。配偶者控除や障害者控除などはこの画面では扱いません。
+                            </div>
+                            <div class="p-3 bg-slate-900/50 border border-slate-800 rounded-lg">
+                                <strong class="text-white block mb-1">住民税</strong>
+                                自治体通知額をそのまま月額入力する方式です。通知が来るまでは0円運用もあり得ます。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </section>
 
     </main>
 
     <!-- Scripts / Simulations Logic -->
     <script>
-        // ===== 税制定数（2025年改正・令和7年度準拠） =====
+        // ===== 税制定数（2026年改正・令和8年度準拠） =====
         // 厚生年金保険料率18.3%（折半9.15%）／健康保険は協会けんぽ料率（折半=料率/2）
-        // 介護保険料率1.59%（折半0.795%）／標準報酬月額上限：厚年65万・健保139万・下限8.8万
+        // 介護保険料率1.62%（折半0.81%）／子ども・子育て支援金率0.23%（会社負担）
+        // 標準報酬月額上限：厚年65万・健保139万・下限8.8万
         const PENSION_RATE_HALF = 0.0915;      // 厚生年金 折半
-        const KAIGO_RATE_HALF = 0.00795;       // 介護保険 折半（1.59%/2）
+        const KAIGO_RATE_HALF = 0.0081;        // 介護保険 折半（1.62%/2）
+        const CHILDCARE_SUPPORT_RATE = 0.0023; // 子ども・子育て支援金（会社負担）
         const PENSION_SMR_CAP = 65;            // 厚生年金 標準報酬月額 上限（万円）
         const HEALTH_SMR_CAP = 139;            // 健康保険 標準報酬月額 上限（万円）
         const SMR_FLOOR = 8.8;                 // 標準報酬月額 下限（万円）
@@ -810,7 +976,7 @@
         let selectTaxType, selectIndustry, industrySelectContainer, selectAccounting;
 
         let bTaxReceived, bTaxPaid, bTaxToPay, bTaxImpact;
-        let tabSummary, tabAnalysis, contentSummary, contentAnalysis;
+        let tabSummary, tabAnalysis, tabPayroll, contentSummary, contentAnalysis, contentPayroll;
 
         let kpiGrossProfit, kpiGrossRatio, kpiPreSalaryProfit;
         let kpiPersonalGross, kpiPersonalGrossMonthly, kpiPersonalTakehome;
@@ -828,6 +994,11 @@
         let bPShaho, bPTax, bPInhabitant, bProvident, bPNet;
         let bCIncome, bCShaho, bCTax, bCReserve;
         let bGrandTotal, advisoryContent;
+        let payrollDependentsInput, payrollTaxModeSelect, payrollResidentTaxInput;
+        let payrollGross, payrollNetPay, payrollEmployerTotal, payrollTotalCompanyCost;
+        let payrollEmployeeHealth, payrollEmployeeCare, payrollEmployeeChildcare, payrollEmployeePension;
+        let payrollWithholdingTax, payrollResidentTax, payrollEmployeeTotal;
+        let payrollEmployerHealth, payrollEmployerCare, payrollEmployerChildcare, payrollEmployerPension, payrollEmployerTotalDetail;
 
         // Safe DOM caching
         function cacheElements() {
@@ -861,8 +1032,10 @@
 
             tabSummary = document.getElementById('tab-summary');
             tabAnalysis = document.getElementById('tab-analysis');
+            tabPayroll = document.getElementById('tab-payroll');
             contentSummary = document.getElementById('content-summary');
             contentAnalysis = document.getElementById('content-analysis');
+            contentPayroll = document.getElementById('content-payroll');
 
             kpiGrossProfit = document.getElementById('kpi-gross-profit');
             kpiGrossRatio = document.getElementById('kpi-gross-ratio');
@@ -916,6 +1089,26 @@
 
             bGrandTotal = document.getElementById('breakdown-grand-total');
             advisoryContent = document.getElementById('advisory-content');
+
+            payrollDependentsInput = document.getElementById('input-payroll-dependents');
+            payrollTaxModeSelect = document.getElementById('select-payroll-tax-mode');
+            payrollResidentTaxInput = document.getElementById('input-payroll-resident-tax');
+            payrollGross = document.getElementById('payroll-gross');
+            payrollNetPay = document.getElementById('payroll-net-pay');
+            payrollEmployerTotal = document.getElementById('payroll-employer-total');
+            payrollTotalCompanyCost = document.getElementById('payroll-total-company-cost');
+            payrollEmployeeHealth = document.getElementById('payroll-employee-health');
+            payrollEmployeeCare = document.getElementById('payroll-employee-care');
+            payrollEmployeeChildcare = document.getElementById('payroll-employee-childcare');
+            payrollEmployeePension = document.getElementById('payroll-employee-pension');
+            payrollWithholdingTax = document.getElementById('payroll-withholding-tax');
+            payrollResidentTax = document.getElementById('payroll-resident-tax');
+            payrollEmployeeTotal = document.getElementById('payroll-employee-total');
+            payrollEmployerHealth = document.getElementById('payroll-employer-health');
+            payrollEmployerCare = document.getElementById('payroll-employer-care');
+            payrollEmployerChildcare = document.getElementById('payroll-employer-childcare');
+            payrollEmployerPension = document.getElementById('payroll-employer-pension');
+            payrollEmployerTotalDetail = document.getElementById('payroll-employer-total-detail');
 
             // 印刷用要素
             printReport = document.getElementById('print-report');
@@ -978,6 +1171,12 @@
         function safeSetText(el, val) { if (el) el.innerText = val; }
         function safeSetHTML(el, val) { if (el) el.innerHTML = val; }
         function safeSetClass(el, className) { if (el) el.className = className; }
+        function formatYen(value) { return Math.round(value).toLocaleString() + '円'; }
+        function roundToNearestTen(value) { return Math.round(value / 10) * 10; }
+        function roundToTaxHundred(value) {
+            const remainder = value % 100;
+            return Math.floor(value / 100) * 100 + (remainder >= 50 ? 100 : 0);
+        }
 
         // Charts
         let chartDist = null;
@@ -1027,7 +1226,7 @@
             });
         }
 
-        // ===== 所得税の基礎控除（2025年改正：合計所得金額に応じて段階的） =====
+        // ===== 所得税の基礎控除（2026年改正：合計所得金額に応じて段階的） =====
         // 単位：万円。合計所得金額（給与所得）をもとに判定
         function getBasicDeductionIncomeTax(totalIncome) {
             if (totalIncome <= 132) return 95;
@@ -1049,7 +1248,7 @@
             return 0;
         }
 
-        // ===== 給与所得控除（2025年改正：最低保障65万円） =====
+        // ===== 給与所得控除（2026年改正：最低保障65万円） =====
         function getEmploymentIncomeDeduction(annualSalary) {
             if (annualSalary <= 0) return 0;
             if (annualSalary <= 190) return 65;            // 最低保障65万（190万円まで）
@@ -1057,6 +1256,159 @@
             if (annualSalary <= 660) return annualSalary * 0.2 + 44;
             if (annualSalary <= 850) return annualSalary * 0.1 + 110;
             return 195;                                     // 上限195万
+        }
+
+        function getMonthlySocialInsuranceBreakdown(monthlySalary, ageGroup, healthRate) {
+            if (monthlySalary <= 0) {
+                return {
+                    employeeHealth: 0,
+                    employeeCare: 0,
+                    employeeChildcareSupport: 0,
+                    employeePension: 0,
+                    employerHealth: 0,
+                    employerCare: 0,
+                    employerChildcareSupport: 0,
+                    employerPension: 0,
+                    employeeTotal: 0,
+                    employerTotal: 0
+                };
+            }
+
+            const pensionSMR = Math.min(Math.max(monthlySalary, SMR_FLOOR), PENSION_SMR_CAP);
+            const healthSMR = Math.min(Math.max(monthlySalary, SMR_FLOOR), HEALTH_SMR_CAP);
+
+            const employeeHealth = healthSMR * (healthRate / 2);
+            const employeeCare = ageGroup === 'over40' ? healthSMR * KAIGO_RATE_HALF : 0;
+            const employeePension = pensionSMR * PENSION_RATE_HALF;
+
+            const employerHealth = healthSMR * (healthRate / 2);
+            const employerCare = ageGroup === 'over40' ? healthSMR * KAIGO_RATE_HALF : 0;
+            const employerChildcareSupport = healthSMR * CHILDCARE_SUPPORT_RATE;
+            const employerPension = pensionSMR * PENSION_RATE_HALF;
+
+            const employeeTotal = employeeHealth + employeeCare + employeePension;
+            const employerTotal = employerHealth + employerCare + employerChildcareSupport + employerPension;
+
+            return {
+                employeeHealth,
+                employeeCare,
+                employeeChildcareSupport: 0,
+                employeePension,
+                employerHealth,
+                employerCare,
+                employerChildcareSupport,
+                employerPension,
+                employeeTotal,
+                employerTotal
+            };
+        }
+
+        function getMonthlyEmploymentIncomeDeductionYen(monthlyAmountYen) {
+            if (monthlyAmountYen <= 0) return 0;
+            if (monthlyAmountYen <= 158333) return 54167;
+            if (monthlyAmountYen <= 299999) return Math.ceil(monthlyAmountYen * 0.3 + 6667);
+            if (monthlyAmountYen <= 549999) return Math.ceil(monthlyAmountYen * 0.2 + 36667);
+            if (monthlyAmountYen <= 708330) return Math.ceil(monthlyAmountYen * 0.1 + 91667);
+            return 162500;
+        }
+
+        function getMonthlyBasicDeductionYen(monthlyAmountYen) {
+            if (monthlyAmountYen <= 2120833) return 48334;
+            if (monthlyAmountYen <= 2162499) return 40000;
+            if (monthlyAmountYen <= 2204166) return 26667;
+            if (monthlyAmountYen <= 2245833) return 13334;
+            return 0;
+        }
+
+        function getMonthlyTaxRateTable(taxableYen) {
+            if (taxableYen <= 162500) return { rate: 0.05105, deduction: 0 };
+            if (taxableYen <= 275000) return { rate: 0.10210, deduction: 8296 };
+            if (taxableYen <= 579166) return { rate: 0.20420, deduction: 36374 };
+            if (taxableYen <= 750000) return { rate: 0.23483, deduction: 54113 };
+            if (taxableYen <= 1500000) return { rate: 0.33693, deduction: 130688 };
+            if (taxableYen <= 3333333) return { rate: 0.40840, deduction: 237893 };
+            return { rate: 0.45945, deduction: 408061 };
+        }
+
+        function getOtsuBaseTaxRateTable(taxableYen) {
+            if (taxableYen <= 162500) return { rate: 0.05, deduction: 0 };
+            if (taxableYen <= 275000) return { rate: 0.10, deduction: 8125 };
+            if (taxableYen <= 579166) return { rate: 0.20, deduction: 35625 };
+            if (taxableYen <= 750000) return { rate: 0.23, deduction: 53000 };
+            if (taxableYen <= 1500000) return { rate: 0.33, deduction: 128000 };
+            return { rate: 0.40, deduction: 233000 };
+        }
+
+        function calculateKouWithholdingTaxYen(salaryAfterSocialInsuranceYen, dependents) {
+            const employmentDeductionYen = getMonthlyEmploymentIncomeDeductionYen(salaryAfterSocialInsuranceYen);
+            const dependentDeductionYen = 31667 * Math.max(0, dependents);
+            const basicDeductionYen = getMonthlyBasicDeductionYen(salaryAfterSocialInsuranceYen);
+            const taxableYen = Math.max(0, salaryAfterSocialInsuranceYen - employmentDeductionYen - dependentDeductionYen - basicDeductionYen);
+            const { rate, deduction } = getMonthlyTaxRateTable(taxableYen);
+            return Math.max(0, roundToNearestTen(taxableYen * rate - deduction));
+        }
+
+        function calculateOtsuWithholdingTaxYen(salaryAfterSocialInsuranceYen, dependents) {
+            if (salaryAfterSocialInsuranceYen <= 0) return 0;
+            if (salaryAfterSocialInsuranceYen < 105000) {
+                return Math.max(0, Math.floor(salaryAfterSocialInsuranceYen * 0.03063) - (1610 * Math.max(0, dependents)));
+            }
+            if (salaryAfterSocialInsuranceYen >= 1710000) {
+                return Math.max(0, Math.floor(655400 + ((salaryAfterSocialInsuranceYen - 1710000) * 0.45945)) - (1610 * Math.max(0, dependents)));
+            }
+            if (salaryAfterSocialInsuranceYen >= 740001) {
+                return Math.max(0, Math.floor(259200 + ((salaryAfterSocialInsuranceYen - 740000) * 0.4084)) - (1610 * Math.max(0, dependents)));
+            }
+
+            const step = salaryAfterSocialInsuranceYen <= 220999 ? 2000 : 3000;
+            const minBase = step === 2000 ? 105000 : 221000;
+            const base = minBase + Math.floor((salaryAfterSocialInsuranceYen - minBase) / step) * step;
+
+            const grossAnnualizedA = base * 2.5;
+            const grossAnnualizedB = base * 1.5;
+            const taxableA = Math.max(0, grossAnnualizedA - getMonthlyEmploymentIncomeDeductionYen(grossAnnualizedA) - 48334);
+            const taxableB = Math.max(0, grossAnnualizedB - getMonthlyEmploymentIncomeDeductionYen(grossAnnualizedB) - 48334);
+            const rateA = getOtsuBaseTaxRateTable(taxableA);
+            const rateB = getOtsuBaseTaxRateTable(taxableB);
+
+            const amountA = Math.max(0, Math.floor(taxableA * rateA.rate - rateA.deduction));
+            const amountB = Math.max(0, Math.floor(taxableB * rateB.rate - rateB.deduction));
+            const diff = roundToTaxHundred(Math.max(0, amountA - amountB));
+            const tax = roundToTaxHundred(diff * 1.021);
+
+            return Math.max(0, tax - (1610 * Math.max(0, dependents)));
+        }
+
+        function calculateMonthlyPayroll(monthlySalary, ageGroup, healthRate, dependents, taxMode, residentTax) {
+            const monthlySalaryYen = Math.round(monthlySalary * 10000);
+            const residentTaxYen = Math.max(0, Math.round(residentTax));
+            const social = getMonthlySocialInsuranceBreakdown(monthlySalary, ageGroup, healthRate);
+
+            const employeeSocialYen = Math.round(social.employeeTotal * 10000);
+            const salaryAfterSocialInsuranceYen = Math.max(0, monthlySalaryYen - employeeSocialYen);
+            const withholdingTaxYen = taxMode === 'otsu'
+                ? calculateOtsuWithholdingTaxYen(salaryAfterSocialInsuranceYen, dependents)
+                : calculateKouWithholdingTaxYen(salaryAfterSocialInsuranceYen, dependents);
+            const employeeTotalYen = employeeSocialYen + withholdingTaxYen + residentTaxYen;
+            const employerTotalYen = Math.round(social.employerTotal * 10000);
+
+            return {
+                gross: monthlySalaryYen,
+                employeeHealth: Math.round(social.employeeHealth * 10000),
+                employeeCare: Math.round(social.employeeCare * 10000),
+                employeeChildcareSupport: 0,
+                employeePension: Math.round(social.employeePension * 10000),
+                withholdingTax: withholdingTaxYen,
+                residentTax: residentTaxYen,
+                employeeTotal: employeeTotalYen,
+                netPay: Math.max(0, monthlySalaryYen - employeeTotalYen),
+                employerHealth: Math.round(social.employerHealth * 10000),
+                employerCare: Math.round(social.employerCare * 10000),
+                employerChildcareSupport: Math.round(social.employerChildcareSupport * 10000),
+                employerPension: Math.round(social.employerPension * 10000),
+                employerTotal: employerTotalYen,
+                totalCompanyCost: monthlySalaryYen + employerTotalYen
+            };
         }
 
         // Precision Tax and Social Insurance Calculation Logic
@@ -1068,22 +1420,9 @@
             const annualSalary = monthlySalary * 12;
 
             // 1. 社会保険料（標準報酬月額の上限・下限を反映）
-            let monthlyShahoEmployer = 0;
-            let monthlyShahoEmployee = 0;
-
-            if (monthlySalary > 0) {
-                // 標準報酬月額：下限8.8万、厚年上限65万、健保上限139万
-                const pensionSMR = Math.min(Math.max(monthlySalary, SMR_FLOOR), PENSION_SMR_CAP);
-                const healthSMR = Math.min(Math.max(monthlySalary, SMR_FLOOR), HEALTH_SMR_CAP);
-
-                const pensionPremium = pensionSMR * PENSION_RATE_HALF;
-                // 健康保険折半率＝料率/2、40歳以上は介護分0.795%を加算
-                const healthRateHalf = healthRate / 2 + (ageGroup === 'over40' ? KAIGO_RATE_HALF : 0);
-                const healthPremium = healthSMR * healthRateHalf;
-
-                monthlyShahoEmployer = pensionPremium + healthPremium;
-                monthlyShahoEmployee = pensionPremium + healthPremium;
-            }
+            const social = getMonthlySocialInsuranceBreakdown(monthlySalary, ageGroup, healthRate);
+            const monthlyShahoEmployer = social.employerHealth + social.employerCare + social.employerPension;
+            const monthlyShahoEmployee = social.employeeHealth + social.employeeCare + social.employeePension;
 
             const annualShahoEmployer = monthlyShahoEmployer * 12;
             const annualShahoEmployee = monthlyShahoEmployee * 12;
@@ -1345,6 +1684,11 @@
 
             safeSetText(bGrandTotal, Math.round(currentRes.totalCombinedCash).toLocaleString());
 
+            const payrollDependents = parseInt(payrollDependentsInput?.value || '0', 10);
+            const payrollTaxMode = payrollTaxModeSelect?.value || 'kou';
+            const payrollResidentTaxValue = parseFloat(payrollResidentTaxInput?.value || '0');
+            updatePayrollUI(calculateMonthlyPayroll(monthlySalary, ageGroup, healthRate, payrollDependents, payrollTaxMode, payrollResidentTaxValue));
+
             renderDoughnut(currentRes.revenueEx, currentRes.subcontractingEx, currentRes.sgaEx, currentRes);
             renderTrendChart(rawRevenue, rawSubcontracting, rawSga, ageGroup, provident, monthlySalary, optimalRes.monthly, taxType, industryRate, healthRate, accountingMethod);
             updateAdvisory(rawRevenue, rawSubcontracting, rawSga, currentRes, optimalRes, taxType);
@@ -1354,7 +1698,7 @@
             // 印刷用HTML要素の同期更新
             if (printCondRevenue) {
                 const ageStr = ageGroup === 'over40' ? '40歳以上65歳未満（介護保険あり）' : '40歳未満（介護保険なし）';
-                const healthStr = healthRate === 0.0944 ? '沖縄 9.44%' : healthRate === 0.0991 ? '東京 9.91%' : healthRate === 0.1000 ? '全国平均 10.00%' : '佐賀 10.78%';
+                const healthStr = getHealthRateLabel(healthRate);
                 const providentStr = provident === '0' ? '未加入' : provident === '2.3' ? 'iDeCoのみ最大(2.3万円/月)' : provident === '7.0' ? '小規模共済のみ最大(7万円/月)' : '両方併用最大(9.3万円/月)';
                 const taxTypeStr = taxType === 'exempt' ? '免税事業者' : taxType === 'principle' ? '一般課税（原則課税）' : taxType === 'simplified' ? '簡易課税' : '2割特例';
                 const industryStr = taxType === 'simplified' ? `（第${industryRate === 0.9 ? '1' : industryRate === 0.8 ? '2' : industryRate === 0.7 ? '3' : industryRate === 0.6 ? '4' : industryRate === 0.5 ? '5' : '6'}種：みなし仕入率${industryRate * 100}%）` : '';
@@ -1583,6 +1927,35 @@
             safeSetHTML(advisoryContent, leftCol + rightCol);
         }
 
+        function getHealthRateLabel(healthRate) {
+            if (healthRate === 0.0944) return '沖縄 9.44%';
+            if (healthRate === 0.0985) return '東京 9.85%';
+            if (healthRate === 0.0990) return '全国平均 9.90%';
+            if (healthRate === 0.1055) return '佐賀 10.55%';
+            return (healthRate * 100).toFixed(2) + '%';
+        }
+
+        function updatePayrollUI(payrollResult) {
+            safeSetText(payrollGross, Math.round(payrollResult.gross).toLocaleString());
+            safeSetText(payrollNetPay, Math.round(payrollResult.netPay).toLocaleString());
+            safeSetText(payrollEmployerTotal, Math.round(payrollResult.employerTotal).toLocaleString());
+            safeSetText(payrollTotalCompanyCost, Math.round(payrollResult.totalCompanyCost).toLocaleString());
+
+            safeSetText(payrollEmployeeHealth, formatYen(payrollResult.employeeHealth));
+            safeSetText(payrollEmployeeCare, formatYen(payrollResult.employeeCare));
+            safeSetText(payrollEmployeeChildcare, formatYen(payrollResult.employeeChildcareSupport));
+            safeSetText(payrollEmployeePension, formatYen(payrollResult.employeePension));
+            safeSetText(payrollWithholdingTax, formatYen(payrollResult.withholdingTax));
+            safeSetText(payrollResidentTax, formatYen(payrollResult.residentTax));
+            safeSetText(payrollEmployeeTotal, formatYen(payrollResult.employeeTotal));
+
+            safeSetText(payrollEmployerHealth, formatYen(payrollResult.employerHealth));
+            safeSetText(payrollEmployerCare, formatYen(payrollResult.employerCare));
+            safeSetText(payrollEmployerChildcare, formatYen(payrollResult.employerChildcareSupport));
+            safeSetText(payrollEmployerPension, formatYen(payrollResult.employerPension));
+            safeSetText(payrollEmployerTotalDetail, formatYen(payrollResult.employerTotal));
+        }
+
         function setupTaxModeSwitchers() {
             const btnExclude = document.getElementById('btn-tax-exclude');
             const btnInclude = document.getElementById('btn-tax-include');
@@ -1638,22 +2011,27 @@
         }
 
         function setupTabSwitchers() {
-            if (tabSummary && tabAnalysis && contentSummary && contentAnalysis) {
-                tabSummary.addEventListener('click', () => {
-                    tabSummary.className = "px-5 py-2 text-sm font-medium rounded-lg bg-emerald-600 text-white transition-all flex items-center gap-2";
-                    tabAnalysis.className = "px-5 py-2 text-sm font-medium rounded-lg text-slate-400 hover:text-white transition-all flex items-center gap-2";
-                    contentSummary.classList.remove('hidden');
-                    contentAnalysis.classList.add('hidden');
-                    calculateAll();
+            const tabs = [
+                { button: tabSummary, content: contentSummary },
+                { button: tabAnalysis, content: contentAnalysis },
+                { button: tabPayroll, content: contentPayroll }
+            ].filter((item) => item.button && item.content);
+
+            const activeClass = "px-5 py-2 text-sm font-medium rounded-lg bg-emerald-600 text-white transition-all flex items-center gap-2";
+            const inactiveClass = "px-5 py-2 text-sm font-medium rounded-lg text-slate-400 hover:text-white transition-all flex items-center gap-2";
+
+            const activateTab = (activeButton) => {
+                tabs.forEach(({ button, content }) => {
+                    const isActive = button === activeButton;
+                    button.className = isActive ? activeClass : inactiveClass;
+                    content.classList.toggle('hidden', !isActive);
                 });
-                tabAnalysis.addEventListener('click', () => {
-                    tabAnalysis.className = "px-5 py-2 text-sm font-medium rounded-lg bg-emerald-600 text-white transition-all flex items-center gap-2";
-                    tabSummary.className = "px-5 py-2 text-sm font-medium rounded-lg text-slate-400 hover:text-white transition-all flex items-center gap-2";
-                    contentAnalysis.classList.remove('hidden');
-                    contentSummary.classList.add('hidden');
-                    calculateAll();
-                });
-            }
+                calculateAll();
+            };
+
+            tabs.forEach(({ button }) => {
+                button.addEventListener('click', () => activateTab(button));
+            });
         }
 
         // ===== キャッシュ管理とデータ保存 & AIプロンプト機能 =====
@@ -1666,6 +2044,9 @@
                 subcontracting: parseFloat(document.getElementById('input-subcontracting')?.value || 200),
                 sga: parseFloat(document.getElementById('input-sga')?.value || 150),
                 salary: parseFloat(document.getElementById('input-salary')?.value || 40),
+                payrollDependents: parseInt(document.getElementById('input-payroll-dependents')?.value || '0', 10),
+                payrollTaxMode: document.getElementById('select-payroll-tax-mode')?.value || 'kou',
+                payrollResidentTax: parseFloat(document.getElementById('input-payroll-resident-tax')?.value || 0),
                 ageGroup: document.getElementById('select-age')?.value || 'over40',
                 provident: document.getElementById('input-provident')?.value || '9.3',
                 taxType: document.getElementById('select-tax-type')?.value || 'simplified',
@@ -1725,6 +2106,9 @@
             syncPair('input-salary', 'num-salary', data.salary);
             
             if (data.ageGroup) setVal('select-age', data.ageGroup);
+            if (data.payrollDependents !== undefined) setVal('input-payroll-dependents', data.payrollDependents);
+            if (data.payrollTaxMode) setVal('select-payroll-tax-mode', data.payrollTaxMode);
+            if (data.payrollResidentTax !== undefined) setVal('input-payroll-resident-tax', data.payrollResidentTax);
             if (data.provident) setVal('input-provident', data.provident);
             if (data.taxType) {
                 setVal('select-tax-type', data.taxType);
@@ -1854,7 +2238,7 @@
             const formatMan = (num) => Math.round(num).toLocaleString() + '万円';
 
             const ageStr = ageGroup === 'over40' ? '40歳以上65歳未満（介護保険あり）' : '40歳未満（介護保険なし）';
-            const healthStr = healthRate === 0.0944 ? '沖縄 9.44%' : healthRate === 0.0991 ? '東京 9.91%' : healthRate === 0.1000 ? '全国平均 10.00%' : '佐賀 10.78%';
+            const healthStr = getHealthRateLabel(healthRate);
             const providentStr = provident === '0' ? '未加入' : provident === '2.3' ? 'iDeCoのみ最大(2.3万円/月)' : provident === '7.0' ? '小規模共済のみ最大(7万円/月)' : '両方併用最大(9.3万円/月)';
             const taxTypeStr = taxType === 'exempt' ? '免税事業者' : taxType === 'principle' ? '一般課税（原則課税）' : taxType === 'simplified' ? '簡易課税' : '2割特例';
             const industryStr = taxType === 'simplified' ? `（第${industryRate === 0.9 ? '1' : industryRate === 0.8 ? '2' : industryRate === 0.7 ? '3' : industryRate === 0.6 ? '4' : industryRate === 0.5 ? '5' : '6'}種：みなし仕入率${industryRate * 100}%）` : '';
@@ -1996,6 +2380,9 @@
             if (selectHealthRate) selectHealthRate.addEventListener('change', calculateAll);
             if (inputProvident) inputProvident.addEventListener('change', calculateAll);
             if (selectAccounting) selectAccounting.addEventListener('change', calculateAll);
+            if (payrollDependentsInput) payrollDependentsInput.addEventListener('change', calculateAll);
+            if (payrollTaxModeSelect) payrollTaxModeSelect.addEventListener('change', calculateAll);
+            if (payrollResidentTaxInput) payrollResidentTaxInput.addEventListener('input', calculateAll);
             if (selectTaxType) {
                 selectTaxType.addEventListener('change', () => {
                     if (selectTaxType.value === 'simplified') {
