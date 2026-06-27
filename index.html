@@ -802,22 +802,34 @@
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4">
                                 <span class="text-xs text-slate-400">総支給額（月額）</span>
-                                <div class="mt-2 text-2xl font-bold text-emerald-400 font-mono"><span id="payroll-gross">0</span><span class="text-xs text-slate-400 ml-1">円</span></div>
+                                <div class="mt-2 flex flex-wrap items-end gap-x-1 gap-y-0.5">
+                                    <span id="payroll-gross" class="text-[2rem] md:text-[1.75rem] leading-none font-bold text-emerald-400 font-mono tracking-tight break-all">0</span>
+                                    <span class="text-xs text-slate-400 leading-none mb-1">円</span>
+                                </div>
                                 <p class="mt-2 text-[11px] text-slate-500">役員報酬の額面です。ここから社保・税金が引かれます。</p>
                             </div>
                             <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4">
                                 <span class="text-xs text-slate-400">差引支給額</span>
-                                <div class="mt-2 text-2xl font-bold text-white font-mono"><span id="payroll-net-pay">0</span><span class="text-xs text-slate-400 ml-1">円</span></div>
+                                <div class="mt-2 flex flex-wrap items-end gap-x-1 gap-y-0.5">
+                                    <span id="payroll-net-pay" class="text-[2rem] md:text-[1.75rem] leading-none font-bold text-white font-mono tracking-tight break-all">0</span>
+                                    <span class="text-xs text-slate-400 leading-none mb-1">円</span>
+                                </div>
                                 <p class="mt-2 text-[11px] text-slate-500">社長個人の口座に振り込む目安です。</p>
                             </div>
                             <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4">
                                 <span class="text-xs text-slate-400">会社負担額</span>
-                                <div class="mt-2 text-2xl font-bold text-blue-400 font-mono"><span id="payroll-employer-total">0</span><span class="text-xs text-slate-400 ml-1">円</span></div>
+                                <div class="mt-2 flex flex-wrap items-end gap-x-1 gap-y-0.5">
+                                    <span id="payroll-employer-total" class="text-[2rem] md:text-[1.75rem] leading-none font-bold text-blue-400 font-mono tracking-tight break-all">0</span>
+                                    <span class="text-xs text-slate-400 leading-none mb-1">円</span>
+                                </div>
                                 <p class="mt-2 text-[11px] text-slate-500">会社が別途負担する社会保険料です。</p>
                             </div>
                             <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4">
                                 <span class="text-xs text-slate-400">会社の総コスト</span>
-                                <div class="mt-2 text-2xl font-bold text-amber-400 font-mono"><span id="payroll-total-company-cost">0</span><span class="text-xs text-slate-400 ml-1">円</span></div>
+                                <div class="mt-2 flex flex-wrap items-end gap-x-1 gap-y-0.5">
+                                    <span id="payroll-total-company-cost" class="text-[2rem] md:text-[1.75rem] leading-none font-bold text-amber-400 font-mono tracking-tight break-all">0</span>
+                                    <span class="text-xs text-slate-400 leading-none mb-1">円</span>
+                                </div>
                                 <p class="mt-2 text-[11px] text-slate-500">総支給額 + 会社負担額の合計です。</p>
                             </div>
                         </div>
