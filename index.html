@@ -966,11 +966,11 @@
     <script>
         // ===== 税制定数（2026年改正・令和8年度準拠） =====
         // 厚生年金保険料率18.3%（折半9.15%）／健康保険は協会けんぽ料率（折半=料率/2）
-        // 介護保険料率1.62%（折半0.81%）／子ども・子育て支援金率0.23%（会社負担）
+        // 介護保険料率1.62%（折半0.81%）／子ども・子育て支援金率0.23%（労使折半 各0.115%）
         // 標準報酬月額上限：厚年65万・健保139万・下限8.8万
         const PENSION_RATE_HALF = 0.0915;      // 厚生年金 折半
         const KAIGO_RATE_HALF = 0.0081;        // 介護保険 折半（1.62%/2）
-        const CHILDCARE_SUPPORT_RATE = 0.0023; // 子ども・子育て支援金（会社負担）
+        const CHILDCARE_SUPPORT_RATE_HALF = 0.00115; // 子ども・子育て支援金 折半（0.23%/2）
         const PENSION_SMR_CAP = 65;            // 厚生年金 標準報酬月額 上限（万円）
         const HEALTH_SMR_CAP = 139;            // 健康保険 標準報酬月額 上限（万円）
         const SMR_FLOOR = 8.8;                 // 標準報酬月額 下限（万円）
@@ -1291,20 +1291,21 @@
 
             const employeeHealth = healthSMR * (healthRate / 2);
             const employeeCare = ageGroup === 'over40' ? healthSMR * KAIGO_RATE_HALF : 0;
+            const employeeChildcareSupport = healthSMR * CHILDCARE_SUPPORT_RATE_HALF;
             const employeePension = pensionSMR * PENSION_RATE_HALF;
 
             const employerHealth = healthSMR * (healthRate / 2);
             const employerCare = ageGroup === 'over40' ? healthSMR * KAIGO_RATE_HALF : 0;
-            const employerChildcareSupport = healthSMR * CHILDCARE_SUPPORT_RATE;
+            const employerChildcareSupport = healthSMR * CHILDCARE_SUPPORT_RATE_HALF;
             const employerPension = pensionSMR * PENSION_RATE_HALF;
 
-            const employeeTotal = employeeHealth + employeeCare + employeePension;
+            const employeeTotal = employeeHealth + employeeCare + employeeChildcareSupport + employeePension;
             const employerTotal = employerHealth + employerCare + employerChildcareSupport + employerPension;
 
             return {
                 employeeHealth,
                 employeeCare,
-                employeeChildcareSupport: 0,
+                employeeChildcareSupport,
                 employeePension,
                 employerHealth,
                 employerCare,
@@ -1408,7 +1409,7 @@
                 gross: monthlySalaryYen,
                 employeeHealth: Math.round(social.employeeHealth * 10000),
                 employeeCare: Math.round(social.employeeCare * 10000),
-                employeeChildcareSupport: 0,
+                employeeChildcareSupport: Math.round(social.employeeChildcareSupport * 10000),
                 employeePension: Math.round(social.employeePension * 10000),
                 withholdingTax: withholdingTaxYen,
                 residentTax: residentTaxYen,
@@ -1433,8 +1434,8 @@
 
             // 1. 社会保険料（標準報酬月額の上限・下限を反映）
             const social = getMonthlySocialInsuranceBreakdown(monthlySalary, ageGroup, healthRate);
-            const monthlyShahoEmployer = social.employerHealth + social.employerCare + social.employerPension;
-            const monthlyShahoEmployee = social.employeeHealth + social.employeeCare + social.employeePension;
+            const monthlyShahoEmployer = social.employerHealth + social.employerCare + social.employerChildcareSupport + social.employerPension;
+            const monthlyShahoEmployee = social.employeeHealth + social.employeeCare + social.employeeChildcareSupport + social.employeePension;
 
             const annualShahoEmployer = monthlyShahoEmployer * 12;
             const annualShahoEmployee = monthlyShahoEmployee * 12;

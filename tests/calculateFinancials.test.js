@@ -129,10 +129,11 @@ function testMonthlyPayrollRepresentativeCase() {
   assert.strictEqual(result.employeeHealth, 19800);
   assert.strictEqual(result.employeeCare, 3240);
   assert.strictEqual(result.employeePension, 36600);
-  assert.strictEqual(result.withholdingTax, 10830);
-  assert.strictEqual(result.netPay, 329530);
-  assert.strictEqual(result.employerChildcareSupport, 920);
-  assert.strictEqual(result.totalCompanyCost, 460560);
+  assert.strictEqual(result.withholdingTax, 10790);
+  assert.strictEqual(result.netPay, 329110);
+  assert.strictEqual(result.employerChildcareSupport, 460);
+  assert.strictEqual(result.employeeChildcareSupport, 460);
+  assert.strictEqual(result.totalCompanyCost, 460100);
 }
 
 function testCareInsuranceTurnsOffUnder40() {
@@ -159,8 +160,8 @@ function testResidentTaxFlowsThroughToNetPay() {
 function testMonthlyAndAnnualSocialInsuranceStayAligned() {
   const monthly = calculateMonthlyPayroll(40, 'over40', 0.099, 0, 'kou', 0);
   const annual = calculateFinancials(1200, 200, 100, 40, 'over40', '0', 'principle', 0.5, 0.099, 'excluded');
-  assert.strictEqual(annual.pShaho, (monthly.employeeHealth + monthly.employeeCare + monthly.employeePension) / 10000 * 12);
-  assert.strictEqual(annual.cShaho, (monthly.employerHealth + monthly.employerCare + monthly.employerPension) / 10000 * 12);
+  assert.strictEqual(annual.pShaho, (monthly.employeeHealth + monthly.employeeCare + monthly.employeeChildcareSupport + monthly.employeePension) / 10000 * 12);
+  assert.strictEqual(annual.cShaho, (monthly.employerHealth + monthly.employerCare + monthly.employerChildcareSupport + monthly.employerPension) / 10000 * 12);
 }
 
 testPrincipleTaxPaidTracksExpenseTax();
